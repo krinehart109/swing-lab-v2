@@ -1,6 +1,6 @@
 # Swing Lab ⛳
 
-A golf swing trainer in Columbus Crew black & gold. Three tools:
+A golf swing trainer. Three tools:
 
 - **Analyze** — load or record a swing video, scrub frame-by-frame, play at ⅛x–1x speed, and draw lines, circles, and measured angles on top (swing plane, spine angle, etc.).
 - **AI Coach** — on-device AI pose tracking (MediaPipe) maps your body through the swing, finds Address/Top/Impact/Finish, and measures tempo ratio, shoulder turn, head & hip sway, and posture loss. Pick a pro (Rory, Tiger, Scottie, Nelly, Freddie, Hideki) for a side-by-side metric comparison, and get the top "best value" fixes — each with a drill, ranked by impact vs effort. Runs entirely in the browser; the model (~6 MB) downloads from a CDN on first use, so the AI tab needs internet the first time. Film face-on with your full body in frame.
