@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Swing Lab</title>
+
+<!-- PWA / iOS home screen -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Swing Lab">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+
+<style>
+  :root {
+    --black: #0d0d0d;
+    --panel: #1a1a1a;
+    --panel-2: #242424;
+    --gold: #FEDD00;
+    --gold-dim: #c9b000;
+    --white: #f5f5f5;
+    --gray: #9a9a9a;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  /* ── Header ─────────────────────────── */
+  header {
+    padding: calc(var(--safe-top) + 10px) 16px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(180deg, #000 0%, var(--black) 100%);
+    border-bottom: 2px solid var(--gold);
+    flex-shrink: 0;
+  }
+  header svg { width: 34px; height: 34px; flex-shrink: 0; }
+  header h1 { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+  header h1 span { color: var(--gold); }
+
+  /* ── Pages ──────────────────────────── */
+  main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .page { display: none; padding: 14px; }
+  .page.active { display: block; }
+
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); margin: 4px 0 10px; }
+
+  /* ── Tab bar ────────────────────────── */
+  nav {
+    display: flex;
+    background: #000;
+    border-top: 1px solid #333;
+    padding-bottom: var(--safe-bottom);
+    flex-shrink: 0;
+  }
+  nav button {
+    flex: 1; background: none; border: none; color: var(--gray);
+    font-size: 11px; font-weight: 600; padding: 10px 0 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer;
+  }
+  nav button svg.nav-icon { width: 22px; height: 22px; }
+  nav button.active { color: var(--gold); }
+
+  /* ── Buttons & inputs ───────────────── */
+  .btn {
+    background: var(--gold); color: #000; border: none; border-radius: 10px;
+    padding: 12px 16px; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .btn:active { background: var(--gold-dim); }
+  .btn.ghost { background: var(--panel-2); color: var(--white); border: 1px solid #3a3a3a; }
+  .btn.small { padding: 8px 12px; font-size: 13px; border-radius: 8px; }
+  .btn.danger { background: #3a1a1a; color: #ff8a8a; border: 1px solid #5a2a2a; }
+
+  select, input[type="text"], textarea {
+    background: var(--panel-2); color: var(--white); border: 1px solid #3a3a3a;
+    border-radius: 8px; padding: 10px; font-size: 15px; width: 100%;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--gold); }
+
+  /* ── Analyze page ───────────────────── */
+  #videoWrap {
+    position: relative; width: 100%; background: #000;
+    border-radius: 12px; overflow: hidden; border: 1px solid #333;
+    aspect-ratio: 9 / 14; max-height: 52vh; margin: 0 auto;
+  }
+  #player { width: 100%; height: 100%; object-fit: contain; display: block; }
+  #overlay { position: absolute; inset: 0; touch-action: none; }
+  #dropHint {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; color: var(--gray);
+    text-align: center; padding: 20px;
+  }
+  #dropHint .big { font-size: 44px; }
+
+  .toolbar { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .toolbar .btn { flex: 1; min-width: 0; }
+  .tool-btn {
+    background: var(--panel-2); color: var(--white); border: 1px solid #3a3a3a;
+    border-radius: 8px; padding: 8px 0; font-size: 13px; font-weight: 600;
+    flex: 1; cursor: pointer;
+  }
+  .tool-btn.active { background: var(--gold); color: #000; border-color: var(--gold); }
+
+  .transport { display: flex; gap: 6px; margin-top: 10px; align-items: center; }
+  .transport .btn { flex: 1; }
+  #scrub { margin-top: 10px; }
+  .speed-row { display: flex; gap: 6px; margin-top: 10px; }
+  .speed-row .tool-btn { font-size: 12px; }
+
+  .swatches { display: flex; gap: 8px; align-items: center; }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid #555; cursor: pointer;
+  }
+  .swatch.active { border-color: var(--white); transform: scale(1.15); }
+
+  /* ── Tempo page ─────────────────────── */
+  .tempo-card {
+    background: var(--panel); border: 1px solid #333; border-radius: 14px;
+    padding: 18px; text-align: center;
+  }
+  #tempoDisplay { font-size: 56px; font-weight: 800; color: var(--gold); line-height: 1.1; }
+  #tempoPhase { font-size: 15px; text-transform: uppercase; letter-spacing: 3px; color: var(--gray); height: 22px; margin-top: 4px; }
+  #tempoPhase.go { color: var(--gold); }
+  .preset-row { display: flex; gap: 8px; margin: 16px 0 10px; }
+  .ratio-note { font-size: 12px; color: var(--gray); margin-top: 12px; line-height: 1.5; }
+  #tempoRing {
+    width: 170px; height: 170px; margin: 6px auto 14px; border-radius: 50%;
+    border: 6px solid #333; display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.1s, box-shadow 0.1s;
+  }
+  #tempoRing.flash { border-color: var(--gold); box-shadow: 0 0 30px rgba(254,221,0,0.5); }
+
+  /* ── Log page ───────────────────────── */
+  .log-form { background: var(--panel); border: 1px solid #333; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .form-row { display: flex; gap: 8px; }
+  .form-row > * { flex: 1; }
+  .stars { display: flex; gap: 6px; justify-content: center; font-size: 30px; }
+  .stars span { color: #444; cursor: pointer; }
+  .stars span.lit { color: var(--gold); }
+  .entry {
+    background: var(--panel); border: 1px solid #333; border-left: 4px solid var(--gold);
+    border-radius: 10px; padding: 12px; margin-top: 10px;
+  }
+  .entry .meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray); margin-bottom: 6px; }
+  .entry .club { color: var(--gold); font-weight: 700; font-size: 15px; }
+  .entry .note { font-size: 14px; line-height: 1.4; white-space: pre-wrap; }
+  .entry .entry-stars { color: var(--gold); font-size: 13px; letter-spacing: 2px; }
+  .entry .del { background: none; border: none; color: #777; font-size: 18px; cursor: pointer; padding: 0 4px; }
+  .empty-note { color: var(--gray); text-align: center; font-size: 14px; margin-top: 24px; }
+
+  /* ── AI Coach page ──────────────────── */
+  .coach-card { background: var(--panel); border: 1px solid #333; border-radius: 14px; padding: 14px; }
+  .coach-intro { font-size: 13px; color: var(--gray); line-height: 1.5; margin-bottom: 12px; }
+  .field-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); display: block; margin-bottom: 6px; }
+  #coachStatus { font-size: 13px; color: var(--gold); margin-top: 10px; min-height: 18px; line-height: 1.4; }
+  .progress { height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  #coachBar { height: 100%; width: 0%; background: var(--gold); transition: width 0.15s; }
+  .keyframes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .kf { background: var(--panel); border: 1px solid #333; border-radius: 8px; overflow: hidden; text-align: center; }
+  .kf canvas { width: 100%; display: block; }
+  .kf .kf-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); padding: 4px 0; }
+  .cmp-table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 10px; overflow: hidden; }
+  .cmp-table th, .cmp-table td { padding: 9px 10px; font-size: 13px; text-align: left; border-bottom: 1px solid #2c2c2c; }
+  .cmp-table th { color: var(--gray); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .cmp-table td.you { color: var(--gold); font-weight: 700; }
+  .pro-blurb { font-size: 12px; color: var(--gray); margin-top: 8px; line-height: 1.5; }
+  .tip { background: var(--panel); border: 1px solid #333; border-left: 4px solid var(--gold); border-radius: 10px; padding: 12px; margin-top: 10px; }
+  .tip h3 { font-size: 15px; margin-bottom: 6px; }
+  .tip .badges { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .badge { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; padding: 3px 8px; border-radius: 20px; background: #2c2c2c; color: var(--gray); }
+  .badge.gold { background: rgba(254, 221, 0, 0.15); color: var(--gold); }
+  .tip p { font-size: 13px; line-height: 1.5; color: #ccc; margin-bottom: 6px; }
+  .tip p b { color: var(--white); }
+  .coach-foot { font-size: 11px; color: #777; margin-top: 14px; text-align: center; line-height: 1.5; }
+  #trimInfo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--gold); }
+  #trimInfo .btn { padding: 5px 10px; font-size: 11px; flex-shrink: 0; }
+  .saved-card { display: flex; gap: 10px; align-items: center; background: var(--panel); border: 1px solid #333; border-radius: 10px; padding: 8px; margin-top: 8px; }
+  .saved-card img { width: 64px; border-radius: 6px; display: block; }
+  .saved-card .info { flex: 1; font-size: 12px; color: var(--gray); line-height: 1.5; }
+  .saved-card .info b { color: var(--white); font-size: 13px; }
+  .saved-card .del { background: none; border: none; color: #777; font-size: 18px; cursor: pointer; padding: 0 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0d0d0d"/><rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#FEDD00" stroke-width="10"/><line x1="318" y1="96" x2="318" y2="330" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M318 96 L210 138 L318 180 Z" fill="#FEDD00"/><path d="M70 380 Q256 320 442 380 L442 420 Q256 360 70 420 Z" fill="#FEDD00" opacity="0.9"/><circle cx="190" cy="330" r="58" fill="#fff"/><path d="M96 250 Q190 120 360 200" fill="none" stroke="#FEDD00" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 30"/></svg>
+  <h1>SWING <span>LAB</span></h1>
+</header>
+
+<main>
+  <!-- ════════ ANALYZE ════════ -->
+  <section id="page-analyze" class="page active">
+    <h2>Swing Analyzer</h2>
+
+    <div id="videoWrap">
+      <video id="player" playsinline webkit-playsinline muted></video>
+      <canvas id="overlay"></canvas>
+      <div id="dropHint">
+        <div class="big">&#127948;&#65039;</div>
+        <div>Record or load a swing video,<br>then scrub frame-by-frame and draw on it.</div>
+        <button class="btn" id="loadBtn2">Load Swing Video</button>
+      </div>
+    </div>
+    <input type="file" id="fileInput" accept="video/*" hidden>
+
+    <div id="trimInfo" hidden>
+      <span id="trimText"></span>
+      <button class="btn ghost" id="trimReset">Use full clip</button>
+    </div>
+
+    <input type="range" id="scrub" min="0" max="1000" value="0" disabled>
+
+    <div class="transport">
+      <button class="btn ghost" id="frameBack">&#9664;&#9664; Frame</button>
+      <button class="btn" id="playBtn">&#9654; Play</button>
+      <button class="btn ghost" id="frameFwd">Frame &#9654;&#9654;</button>
+    </div>
+
+    <div class="speed-row">
+      <button class="tool-btn speed" data-speed="0.125">&#8539;x</button>
+      <button class="tool-btn speed" data-speed="0.25">&#188;x</button>
+      <button class="tool-btn speed" data-speed="0.5">&#189;x</button>
+      <button class="tool-btn speed active" data-speed="1">1x</button>
+    </div>
+
+    <div class="toolbar" style="margin-top:14px">
+      <button class="tool-btn draw-tool active" data-tool="line">&#9585; Line</button>
+      <button class="tool-btn draw-tool" data-tool="circle">&#9711; Circle</button>
+      <button class="tool-btn draw-tool" data-tool="angle">&#8736; Angle</button>
+      <button class="tool-btn draw-tool" data-tool="free">&#9998; Draw</button>
+    </div>
+
+    <div class="toolbar" style="align-items:center; justify-content:space-between">
+      <div class="swatches">
+        <div class="swatch active" data-color="#FEDD00" style="background:#FEDD00"></div>
+        <div class="swatch" data-color="#ffffff" style="background:#ffffff"></div>
+        <div class="swatch" data-color="#ff4444" style="background:#ff4444"></div>
+        <div class="swatch" data-color="#44aaff" style="background:#44aaff"></div>
+      </div>
+      <button class="btn ghost small" id="undoBtn">&#8630; Undo</button>
+      <button class="btn ghost small" id="clearBtn">Clear</button>
+      <button class="btn small" id="loadBtn">New Video</button>
+    </div>
+  </section>
+
+  <!-- ════════ AI COACH ════════ -->
+  <section id="page-coach" class="page">
+    <h2>AI Swing Coach</h2>
+    <div class="coach-card">
+      <p class="coach-intro">
+        On-device AI pose tracking maps your body through the swing, measures
+        <b style="color:var(--white)">tempo, shoulder turn, head &amp; hip sway, and posture</b>,
+        compares you to a tour pro, and ranks the highest-value fixes.
+        Film <b style="color:var(--white)">face-on, full body in frame</b>, and trim the clip so it starts at address.
+      </p>
+      <label class="field-label" for="proSelect">Compare my swing against</label>
+      <select id="proSelect">
+        <option value="rory">Rory McIlroy &mdash; modern power</option>
+        <option value="tiger">Tiger Woods &mdash; total control</option>
+        <option value="scottie">Scottie Scheffler &mdash; world No. 1</option>
+        <option value="nelly">Nelly Korda &mdash; silky smooth</option>
+        <option value="fred">Fred Couples &mdash; effortless</option>
+        <option value="hideki">Hideki Matsuyama &mdash; paused precision</option>
+      </select>
+      <button class="btn" id="analyzeBtn" style="width:100%; margin-top:12px">&#9889; Analyze My Swing</button>
+      <div id="coachStatus"></div>
+      <div class="progress"><div id="coachBar"></div></div>
+    </div>
+
+    <div id="coachResults" hidden>
+      <h2 style="margin-top:18px">Key Positions</h2>
+      <div class="keyframes" id="keyframes"></div>
+
+      <h2 style="margin-top:18px">You vs <span id="proName"></span></h2>
+      <div id="compareTable"></div>
+
+      <h2 style="margin-top:18px">Best Value Fixes</h2>
+      <div id="tipsList"></div>
+
+      <button class="btn" id="saveBtn" style="width:100%; margin-top:16px">&#128190; Save Analysis + Clip</button>
+
+      <p class="coach-foot">
+        Measurements are estimated from a single 2-D camera &mdash; treat them as trends, not gospel.
+        Re-film from the same spot each session to track progress.
+      </p>
+    </div>
+
+    <h2 style="margin-top:18px">Saved Swings</h2>
+    <div id="savedList"><div class="empty-note" style="font-size:13px">Nothing saved yet &mdash; analyze a swing, then hit save.</div></div>
+  </section>
+
+  <!-- ════════ TEMPO ════════ -->
+  <section id="page-tempo" class="page">
+    <h2>Tempo Trainer</h2>
+    <div class="tempo-card">
+      <div id="tempoRing">
+        <div>
+          <div id="tempoDisplay">3:1</div>
+          <div id="tempoPhase">ready</div>
+        </div>
+      </div>
+
+      <div class="preset-row">
+        <button class="tool-btn preset" data-back="0.7" data-down="0.233">Tour 21/7</button>
+        <button class="tool-btn preset active" data-back="0.8" data-down="0.267">Smooth 24/8</button>
+        <button class="tool-btn preset" data-back="0.9" data-down="0.3">Easy 27/9</button>
+      </div>
+
+      <button class="btn" id="tempoBtn" style="width:100%">&#9654; Start Tempo</button>
+
+      <div class="ratio-note">
+        Pro swings share a <b style="color:var(--gold)">3:1 tempo</b> — the backswing takes
+        3&times; as long as the downswing. Start your takeaway on the <b>first tone</b>,
+        reach the top on the <b>second</b>, strike the ball on the <b>third</b>.
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ LOG ════════ -->
+  <section id="page-log" class="page">
+    <h2>Practice Log</h2>
+    <div class="log-form">
+      <div class="form-row">
+        <select id="logClub">
+          <option>Driver</option><option>3 Wood</option><option>Hybrid</option>
+          <option>4 Iron</option><option>5 Iron</option><option>6 Iron</option>
+          <option>7 Iron</option><option>8 Iron</option><option>9 Iron</option>
+          <option>Pitching Wedge</option><option>Sand Wedge</option><option>Lob Wedge</option>
+          <option>Putter</option>
+        </select>
+      </div>
+      <div class="stars" id="stars">
+        <span data-v="1">&#9733;</span><span data-v="2">&#9733;</span><span data-v="3">&#9733;</span><span data-v="4">&#9733;</span><span data-v="5">&#9733;</span>
+      </div>
+      <textarea id="logNote" rows="3" placeholder="How did it feel? Ball flight, contact, swing thought&hellip;"></textarea>
+      <button class="btn" id="logSave">Save Session Note</button>
+    </div>
+    <div id="logList"></div>
+  </section>
+</main>
+
+<nav>
+  <button class="tab active" data-page="analyze">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="3"/>
+      <path d="M6.5 15.5 Q10.5 7.5 17.5 11" stroke-dasharray="0.5 2.8"/>
+      <circle cx="8.5" cy="15.5" r="1.8"/>
+    </svg>Analyze</button>
+  <button class="tab" data-page="coach">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="10" cy="14" r="6.5"/>
+      <circle cx="8" cy="12" r="0.4" fill="currentColor" stroke="none"/>
+      <circle cx="11.5" cy="11.5" r="0.4" fill="currentColor" stroke="none"/>
+      <circle cx="10" cy="14.5" r="0.4" fill="currentColor" stroke="none"/>
+      <circle cx="12.5" cy="15" r="0.4" fill="currentColor" stroke="none"/>
+      <circle cx="7.5" cy="15.5" r="0.4" fill="currentColor" stroke="none"/>
+      <path d="M18.5 2.5 L19.5 5.5 L22.5 6.5 L19.5 7.5 L18.5 10.5 L17.5 7.5 L14.5 6.5 L17.5 5.5 Z" fill="currentColor" stroke="none"/>
+    </svg>AI Coach</button>
+  <button class="tab" data-page="tempo">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="14" r="7"/>
+      <line x1="12" y1="7" x2="12" y2="4.5"/>
+      <line x1="9.8" y1="3" x2="14.2" y2="3"/>
+      <line x1="12" y1="14" x2="15.5" y2="11"/>
+    </svg>Tempo</button>
+  <button class="tab" data-page="log">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5" y="3" width="14" height="18" rx="2"/>
+      <line x1="8.5" y1="8" x2="15.5" y2="8"/>
+      <line x1="8.5" y1="12" x2="15.5" y2="12"/>
+      <path d="M8.5 16.5 L10.5 18.5 L14.5 14.5"/>
+    </svg>Log</button>
+</nav>
+
+<script>
+/* ═══════════ Tabs ═══════════ */
+document.querySelectorAll('nav .tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav .tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('page-' + btn.dataset.page).classList.add('active');
+    if (btn.dataset.page !== 'tempo') stopTempo();
+  });
+});
+
+/* ═══════════ Analyzer ═══════════ */
+const player   = document.getElementById('player');
+const overlay  = document.getElementById('overlay');
+const ctx      = overlay.getContext('2d');
+const wrap     = document.getElementById('videoWrap');
+const dropHint = document.getElementById('dropHint');
+const fileIn   = document.getElementById('fileInput');
+const scrub    = document.getElementById('scrub');
+const playBtn  = document.getElementById('playBtn');
+const trimInfo = document.getElementById('trimInfo');
+const trimText = document.getElementById('trimText');
+const FRAME    = 1 / 30;
+
+/* playback window — defaults to the whole clip; auto-trim narrows it */
+const trim = { start: 0, end: Infinity };
+window.trim = trim;
+window.setTrim = (s, e, label) => {
+  trim.start = s;
+  trim.end = e;
+  if (label) {
+    trimText.innerHTML = label;
+    document.getElementById('trimReset').hidden = false;
+    trimInfo.hidden = false;
+  } else {
+    trimInfo.hidden = true;
+  }
+  if (player.duration && (player.currentTime < s || player.currentTime > e)) player.currentTime = s;
+};
+document.getElementById('trimReset').addEventListener('click', () => {
+  window.setTrim(0, player.duration || Infinity, null);
+});
+
+let shapes = [];          // committed drawings (normalized 0..1 coords)
+let draft  = null;        // shape in progress
+let tool   = 'line';
+let color  = '#FEDD00';
+let anglePts = [];
+
+function sizeCanvas() {
+  overlay.width  = wrap.clientWidth  * devicePixelRatio;
+  overlay.height = wrap.clientHeight * devicePixelRatio;
+  overlay.style.width  = wrap.clientWidth + 'px';
+  overlay.style.height = wrap.clientHeight + 'px';
+  redraw();
+}
+window.addEventListener('resize', sizeCanvas);
+sizeCanvas();
+
+document.getElementById('loadBtn').addEventListener('click', () => fileIn.click());
+document.getElementById('loadBtn2').addEventListener('click', () => fileIn.click());
+
+window.appLoadVideo = url => {
+  player.src = url;
+  player.load();
+  dropHint.style.display = 'none';
+  scrub.disabled = false;
+  shapes = []; anglePts = []; draft = null;
+  trim.start = 0; trim.end = Infinity;
+  trimInfo.hidden = true;
+  player.addEventListener('loadedmetadata', () => { trim.end = player.duration; sizeCanvas(); }, { once: true });
+  redraw();
+};
+fileIn.addEventListener('change', () => {
+  const f = fileIn.files[0];
+  if (f) window.appLoadVideo(URL.createObjectURL(f));
+});
+
+/* transport */
+playBtn.addEventListener('click', () => {
+  if (!player.src) return fileIn.click();
+  if (player.paused) {
+    if (player.currentTime >= trim.end - 0.05) player.currentTime = trim.start;
+    player.play();
+  } else { player.pause(); }
+});
+player.addEventListener('play',  () => playBtn.innerHTML = '&#10074;&#10074; Pause');
+player.addEventListener('pause', () => playBtn.innerHTML = '&#9654; Play');
+
+document.getElementById('frameBack').addEventListener('click', () => stepFrame(-1));
+document.getElementById('frameFwd') .addEventListener('click', () => stepFrame(1));
+function stepFrame(dir) {
+  if (!player.src) return;
+  player.pause();
+  const lo = trim.start, hi = Math.min(player.duration || 0, trim.end);
+  player.currentTime = Math.max(lo, Math.min(hi, player.currentTime + dir * FRAME));
+}
+
+player.addEventListener('timeupdate', () => {
+  if (!player.duration) return;
+  const span = Math.max(0.01, Math.min(player.duration, trim.end) - trim.start);
+  scrub.value = Math.max(0, Math.min(1000, (player.currentTime - trim.start) / span * 1000));
+  if (!player.paused && player.currentTime >= trim.end) player.pause();
+});
+scrub.addEventListener('input', () => {
+  if (!player.duration) return;
+  player.pause();
+  const span = Math.min(player.duration, trim.end) - trim.start;
+  player.currentTime = trim.start + (scrub.value / 1000) * span;
+});
+
+/* speed */
+document.querySelectorAll('.speed').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.speed').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  player.playbackRate = parseFloat(b.dataset.speed);
+}));
+
+/* tools & colors */
+document.querySelectorAll('.draw-tool').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.draw-tool').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  tool = b.dataset.tool;
+  anglePts = [];
+}));
+document.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  s.classList.add('active');
+  color = s.dataset.color;
+}));
+
+document.getElementById('undoBtn').addEventListener('click', () => { shapes.pop(); anglePts = []; redraw(); });
+document.getElementById('clearBtn').addEventListener('click', () => { shapes = []; anglePts = []; draft = null; redraw(); });
+
+/* drawing — pointer events, normalized coords so drawings survive resize */
+function norm(e) {
+  const r = overlay.getBoundingClientRect();
+  return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+}
+let drawing = false;
+
+overlay.addEventListener('pointerdown', e => {
+  if (!player.src) return;
+  e.preventDefault();
+  const p = norm(e);
+  if (tool === 'angle') {
+    anglePts.push(p);
+    if (anglePts.length === 3) { shapes.push({ tool: 'angle', pts: anglePts, color }); anglePts = []; }
+    redraw();
+    return;
+  }
+  drawing = true;
+  overlay.setPointerCapture(e.pointerId);
+  draft = tool === 'free'
+    ? { tool, pts: [p], color }
+    : { tool, a: p, b: p, color };
+});
+overlay.addEventListener('pointermove', e => {
+  if (!drawing || !draft) return;
+  const p = norm(e);
+  if (draft.tool === 'free') draft.pts.push(p); else draft.b = p;
+  redraw();
+});
+overlay.addEventListener('pointerup', () => {
+  if (drawing && draft) shapes.push(draft);
+  drawing = false; draft = null;
+  redraw();
+});
+
+function px(p) { return [p.x * overlay.width, p.y * overlay.height]; }
+
+function drawShape(s) {
+  ctx.strokeStyle = s.color;
+  ctx.fillStyle = s.color;
+  ctx.lineWidth = 3 * devicePixelRatio;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  if (s.tool === 'line') {
+    ctx.moveTo(...px(s.a)); ctx.lineTo(...px(s.b)); ctx.stroke();
+  } else if (s.tool === 'circle') {
+    const [ax, ay] = px(s.a), [bx, by] = px(s.b);
+    ctx.ellipse((ax+bx)/2, (ay+by)/2, Math.abs(bx-ax)/2, Math.abs(by-ay)/2, 0, 0, Math.PI*2);
+    ctx.stroke();
+  } else if (s.tool === 'free') {
+    s.pts.forEach((p, i) => i ? ctx.lineTo(...px(p)) : ctx.moveTo(...px(p)));
+    ctx.stroke();
+  } else if (s.tool === 'angle') {
+    const [a, v, b] = s.pts;
+    ctx.moveTo(...px(a)); ctx.lineTo(...px(v)); ctx.lineTo(...px(b)); ctx.stroke();
+    const ang1 = Math.atan2(a.y - v.y, a.x - v.x);
+    const ang2 = Math.atan2(b.y - v.y, b.x - v.x);
+    let deg = Math.abs((ang1 - ang2) * 180 / Math.PI);
+    if (deg > 180) deg = 360 - deg;
+    const [vx, vy] = px(v);
+    ctx.font = `bold ${14 * devicePixelRatio}px -apple-system, sans-serif`;
+    ctx.fillText(deg.toFixed(1) + '°', vx + 10 * devicePixelRatio, vy - 10 * devicePixelRatio);
+  }
+}
+
+function redraw() {
+  ctx.clearRect(0, 0, overlay.width, overlay.height);
+  shapes.forEach(drawShape);
+  if (draft) drawShape(draft);
+  // angle-in-progress markers
+  ctx.fillStyle = color;
+  anglePts.forEach(p => {
+    const [x, y] = px(p);
+    ctx.beginPath(); ctx.arc(x, y, 5 * devicePixelRatio, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+/* ═══════════ Tempo Trainer ═══════════ */
+const tempoBtn   = document.getElementById('tempoBtn');
+const tempoPhase = document.getElementById('tempoPhase');
+const tempoRing  = document.getElementById('tempoRing');
+const tempoDisp  = document.getElementById('tempoDisplay');
+let audioCtx = null, tempoTimers = [], tempoOn = false;
+let backTime = 0.8, downTime = 0.267;   // seconds (24/8 frames @30fps)
+
+document.querySelectorAll('.preset').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.preset').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  backTime = parseFloat(b.dataset.back);
+  downTime = parseFloat(b.dataset.down);
+  tempoDisp.textContent = b.textContent.split(' ')[1].replace('/', ':');
+  if (tempoOn) { stopTempo(); startTempo(); }
+}));
+
+function beep(freq, dur = 0.09) {
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.frequency.value = freq;
+  o.type = 'sine';
+  g.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + dur);
+}
+function flash(label) {
+  tempoPhase.textContent = label;
+  tempoPhase.classList.add('go');
+  tempoRing.classList.add('flash');
+  setTimeout(() => tempoRing.classList.remove('flash'), 120);
+}
+
+function cycle() {
+  flash('takeaway'); beep(440);
+  tempoTimers.push(setTimeout(() => { flash('top'); beep(660); }, backTime * 1000));
+  tempoTimers.push(setTimeout(() => { flash('impact!'); beep(880, 0.15); }, (backTime + downTime) * 1000));
+  tempoTimers.push(setTimeout(() => { tempoPhase.textContent = 'reset…'; tempoPhase.classList.remove('go'); }, (backTime + downTime) * 1000 + 600));
+  tempoTimers.push(setTimeout(cycle, (backTime + downTime) * 1000 + 2200));
+}
+
+function startTempo() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  audioCtx.resume();
+  tempoOn = true;
+  tempoBtn.innerHTML = '&#9632; Stop Tempo';
+  cycle();
+}
+function stopTempo() {
+  tempoOn = false;
+  tempoTimers.forEach(clearTimeout);
+  tempoTimers = [];
+  tempoBtn.innerHTML = '&#9654; Start Tempo';
+  tempoPhase.textContent = 'ready';
+  tempoPhase.classList.remove('go');
+}
+tempoBtn.addEventListener('click', () => tempoOn ? stopTempo() : startTempo());
+
+/* ═══════════ Practice Log ═══════════ */
+const LS_KEY = 'swinglab-log';
+let rating = 3;
+const starsEl = document.getElementById('stars');
+
+function paintStars() {
+  starsEl.querySelectorAll('span').forEach(s => s.classList.toggle('lit', +s.dataset.v <= rating));
+}
+starsEl.querySelectorAll('span').forEach(s => s.addEventListener('click', () => { rating = +s.dataset.v; paintStars(); }));
+paintStars();
+
+function getLog()  { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
+function setLog(l) { localStorage.setItem(LS_KEY, JSON.stringify(l)); }
+
+document.getElementById('logSave').addEventListener('click', () => {
+  const note = document.getElementById('logNote').value.trim();
+  const club = document.getElementById('logClub').value;
+  const log = getLog();
+  log.unshift({ id: Date.now(), club, rating, note, date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) });
+  setLog(log);
+  document.getElementById('logNote').value = '';
+  renderLog();
+});
+
+function renderLog() {
+  const log = getLog();
+  const list = document.getElementById('logList');
+  if (!log.length) {
+    list.innerHTML = '<div class="empty-note">No sessions yet &mdash; log your first range session above. &#9971;</div>';
+    return;
+  }
+  list.innerHTML = log.map(e => `
+    <div class="entry">
+      <div class="meta">
+        <span class="club">${e.club}</span>
+        <span>${e.date} <button class="del" data-id="${e.id}">&times;</button></span>
+      </div>
+      <div class="entry-stars">${'★'.repeat(e.rating)}${'☆'.repeat(5 - e.rating)}</div>
+      ${e.note ? `<div class="note">${e.note.replace(/</g, '&lt;')}</div>` : ''}
+    </div>`).join('');
+  list.querySelectorAll('.del').forEach(b => b.addEventListener('click', () => {
+    setLog(getLog().filter(e => e.id !== +b.dataset.id));
+    renderLog();
+  }));
+}
+renderLog();
+
+/* ═══════════ Service worker (offline) ═══════════ */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+
+<script type="module">
+/* ═══════════ AI Swing Coach (on-device pose AI) ═══════════ */
+const $id  = s => document.getElementById(s);
+const vid  = $id('player');
+const aBtn = $id('analyzeBtn');
+const sEl  = $id('coachStatus');
+const bEl  = $id('coachBar');
+
+const PROS = {
+  rory:    { name: 'Rory McIlroy',      tempo: 3.0, turn: 105, head: 10, hip: 20, posture: 4, blurb: 'Massive shoulder turn with a quiet head — power comes from rotation, never sway.' },
+  tiger:   { name: 'Tiger Woods',       tempo: 3.0, turn: 95,  head: 8,  hip: 18, posture: 3, blurb: 'Ruthlessly stable posture from address to impact; the body never bails on the strike.' },
+  scottie: { name: 'Scottie Scheffler', tempo: 3.0, turn: 100, head: 12, hip: 30, posture: 5, blurb: 'The feet dance, but tempo and face control never change. Function over form.' },
+  nelly:   { name: 'Nelly Korda',       tempo: 3.1, turn: 100, head: 8,  hip: 15, posture: 3, blurb: 'Possibly the smoothest tempo in professional golf — nothing ever looks rushed.' },
+  fred:    { name: 'Fred Couples',      tempo: 3.3, turn: 110, head: 12, hip: 22, posture: 4, blurb: 'Proof that effortless-looking tempo creates effortless power.' },
+  hideki:  { name: 'Hideki Matsuyama',  tempo: 3.6, turn: 95,  head: 6,  hip: 15, posture: 2, blurb: 'The pause at the top keeps his transition perfectly ordered. Patience as a superpower.' }
+};
+
+const RULES = [
+  { id: 'tempo-fast', impact: 5, effort: 1,
+    test: m => m.tempo !== null && m.tempo < 2.6,
+    sev:  m => (2.6 - m.tempo) * 2,
+    title: 'Slow the transition',
+    why:  m => `Your tempo measured ${m.tempo.toFixed(1)}:1 — quicker than the 3:1 tour benchmark. Rushing the change of direction costs more strikes than any positional flaw.`,
+    drill: 'Shadow-swing to the Tempo tab (Smooth 24/8): say "one-two-three" going back, "one" coming down. 20 reps a day for a week — no ball needed.' },
+  { id: 'tempo-slow', impact: 3, effort: 1,
+    test: m => m.tempo !== null && m.tempo > 4.0,
+    sev:  m => (m.tempo - 4.0),
+    title: 'Tighten the backswing',
+    why:  m => `Tempo measured ${m.tempo.toFixed(1)}:1 — the backswing is dragging, which makes the downswing hard to time consistently.`,
+    drill: 'Feel like the club never stops moving: try Tour 21/7 on the Tempo tab and start your hands immediately on the first tone.' },
+  { id: 'head', impact: 4, effort: 2,
+    test: m => m.head > 35,
+    sev:  m => (m.head - 35) / 35,
+    title: 'Quiet your head',
+    why:  m => `Your head moves ~${Math.round(m.head)}% of your shoulder width during the swing — pros stay under ~15%. A moving head moves the bottom of your swing arc.`,
+    drill: 'Practice with your lead temple brushing a door frame, or watch the shadow of your head on the range. Steady through impact — the finish can release freely.' },
+  { id: 'hip', impact: 4, effort: 2,
+    test: m => m.hip > 50,
+    sev:  m => (m.hip - 50) / 50,
+    title: 'Turn, don&#8217;t slide',
+    why:  m => `Your hips sway ~${Math.round(m.hip)}% of shoulder width. Sliding instead of turning drains power and causes fat and thin contact.`,
+    drill: 'Stick an alignment rod in the ground a fist outside your trail hip. Make backswings without bumping it — you&#8217;ll feel the trail hip turn behind you.' },
+  { id: 'posture', impact: 5, effort: 3,
+    test: m => m.posture !== null && m.posture > 9,
+    sev:  m => (m.posture - 9) / 9,
+    title: 'Hold your posture (no early extension)',
+    why:  m => `Your spine angle changes ~${Math.round(m.posture)}&deg; between address and impact. Standing up through the ball is the #1 amateur power leak.`,
+    drill: 'Set up with your glutes against a chair back and keep contact until your arms pass impact. 10 slow reps, then 10 at speed.' },
+  { id: 'turn', impact: 4, effort: 2,
+    test: m => m.turn < 55,
+    sev:  m => (55 - m.turn) / 55,
+    title: 'Free up your shoulder turn',
+    why:  m => `Estimated shoulder turn is ~${Math.round(m.turn)}&deg;. A fuller turn stores far more speed than swinging the arms harder.`,
+    drill: 'Flare your trail foot 20&ndash;30&deg; at address and feel your lead shoulder reach your chin at the top. Width first, speed later.' }
+];
+
+const UNIVERSAL = [
+  { id: 'strike', impact: 5, effort: 1, title: 'Find the center of the face',
+    why:  () => 'Strike location is worth more ball speed than any swing change — a centered hit at 85 mph beats a heel strike at 95.',
+    drill: 'Spray foot powder (or dry-erase marker) on the clubface and hit 20 balls. Just seeing your pattern moves it toward center.' },
+  { id: 'wedge', impact: 4, effort: 2, title: 'Own 40&ndash;60 yards',
+    why:  () => 'The fastest scoring gains for almost every amateur live inside 60 yards, not off the tee.',
+    drill: 'Ladder drill: wedges to 40, 50, 60 yards in rotation, 5 balls each. Log the session in the Log tab.' },
+  { id: 'tempo-u', impact: 3, effort: 1, title: 'Groove 3:1 tempo',
+    why:  () => 'Tempo is the cheapest consistency upgrade in golf — it organizes the whole swing without a single technical thought.',
+    drill: '20 shadow swings a day with the Tempo tab tones: takeaway on one, top on two, strike on three.' }
+];
+
+function status(t) { sEl.innerHTML = t; }
+function bar(f)    { bEl.style.width = (f * 100).toFixed(0) + '%'; }
+
+/* lazy-load MediaPipe pose model from CDN (cached by the browser after first run) */
+let landmarkerP = null;
+function getLandmarker() {
+  landmarkerP ??= (async () => {
+    const mp = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+    const files = await mp.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+    return mp.PoseLandmarker.createFromOptions(files, {
+      baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task' },
+      runningMode: 'IMAGE',
+      numPoses: 1
+    });
+  })();
+  return landmarkerP;
+}
+
+const seekTo = t => new Promise(res => {
+  const h = () => { vid.removeEventListener('seeked', h); requestAnimationFrame(res); };
+  vid.addEventListener('seeked', h);
+  vid.currentTime = t;
+});
+
+const metadataReady = () => new Promise(res => {
+  if (vid.readyState >= 1 && vid.duration) return res();
+  vid.addEventListener('loadedmetadata', () => res(), { once: true });
+});
+
+/* ── auto-trim: frame-difference motion scan finds the swing window ── */
+let currentFile = null;
+document.getElementById('fileInput').addEventListener('change', async () => {
+  const f = document.getElementById('fileInput').files[0];
+  if (!f) return;
+  currentFile = f;
+  await metadataReady();
+  autoTrim();
+});
+
+async function autoTrim() {
+  const dur = vid.duration;
+  if (!dur || dur < 3.5) return;
+  const trimText = $id('trimText');
+  const trimInfo = $id('trimInfo');
+  $id('trimReset').hidden = true;
+  trimText.innerHTML = '&#9986;&#65039; Finding your swing&hellip;';
+  trimInfo.hidden = false;
+  try {
+    const n = Math.min(60, Math.max(24, Math.round(dur * 6)));
+    const c = document.createElement('canvas');
+    c.width = 64;
+    c.height = Math.max(2, Math.round(64 * vid.videoHeight / vid.videoWidth));
+    const cx = c.getContext('2d', { willReadFrequently: true });
+    let prev = null;
+    const motion = [];
+    for (let i = 0; i < n; i++) {
+      await seekTo(i * dur / n);
+      cx.drawImage(vid, 0, 0, c.width, c.height);
+      const d = cx.getImageData(0, 0, c.width, c.height).data;
+      if (prev) {
+        let sum = 0;
+        for (let j = 0; j < d.length; j += 16) sum += Math.abs(d[j] - prev[j]);
+        motion.push(sum / (d.length / 16));
+      } else motion.push(0);
+      prev = d.slice();
+    }
+    motion[0] = motion[1] = 0;   // first diffs reflect decoder warm-up, not real motion
+    const max = Math.max(...motion);
+    if (max < 6) { trimInfo.hidden = true; vid.currentTime = 0; return; }
+    const thr = max * 0.15;
+    const peak = motion.indexOf(max);
+    let lo = peak, hi = peak, gap = 0;
+    for (let i = peak - 1; i >= 0; i--) { if (motion[i] > thr) { lo = i; gap = 0; } else if (++gap > 2) break; }
+    gap = 0;
+    for (let i = peak + 1; i < n; i++) { if (motion[i] > thr) { hi = i; gap = 0; } else if (++gap > 2) break; }
+    const step = dur / n;
+    const start = Math.max(0, lo * step - 1.2);
+    const end = Math.min(dur, (hi + 1) * step + 0.8);
+    if (end - start > dur * 0.92) { trimInfo.hidden = true; vid.currentTime = 0; return; }
+    window.setTrim(start, end, `&#9986;&#65039; Auto-trimmed to your swing: ${start.toFixed(1)}s &ndash; ${end.toFixed(1)}s`);
+    vid.currentTime = start;
+  } catch { trimInfo.hidden = true; }
+}
+
+/* landmark indices: 0 nose, 11/12 shoulders, 13/14 elbows, 15/16 wrists, 23/24 hips, 25/26 knees, 27/28 ankles */
+const CORE  = [11, 12, 15, 16, 23, 24];
+const BONES = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+const goodPose = p => p && CORE.every(i => p[i]) && CORE.reduce((s, i) => s + (p[i].visibility ?? 1), 0) / CORE.length > 0.5;
+const mid     = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+const wristOf = p => mid(p[15], p[16]);
+const dist    = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const spineLean = p => {
+  const s = mid(p[11], p[12]), h = mid(p[23], p[24]);
+  return Math.atan2(s.x - h.x, h.y - s.y) * 180 / Math.PI;
+};
+
+function computeMetrics(frames) {
+  const vi = frames.map((f, i) => f.p ? i : -1).filter(i => i >= 0);
+  if (vi.length < 12) return null;
+  const F = i => frames[i];
+  const a  = vi[0];
+  const pA = F(a).p;
+  const shW = Math.max(0.02, Math.abs(pA[11].x - pA[12].x));
+  const wA = wristOf(pA);
+
+  let start = a;
+  for (const i of vi) if (i > a && dist(wristOf(F(i).p), wA) > 0.35 * shW) { start = i; break; }
+  let top = start;
+  for (const i of vi) if (i >= start && wristOf(F(i).p).y < wristOf(F(top).p).y) top = i;
+  let impact = -1;
+  for (const i of vi) if (i > top && wristOf(F(i).p).y >= wA.y - 0.04) { impact = i; break; }
+  const finish = vi[vi.length - 1];
+  if (top <= start) return null;
+
+  const tempo = impact > top ? (F(top).t - F(start).t) / (F(impact).t - F(top).t) : null;
+  const upTo = impact > top ? impact : top;
+  let head = 0, hip = 0;
+  for (const i of vi) {
+    if (i < a || i > upTo) continue;
+    const p = F(i).p;
+    head = Math.max(head, Math.abs(p[0].x - pA[0].x) / shW * 100);
+    hip  = Math.max(hip,  Math.abs(mid(p[23], p[24]).x - mid(pA[23], pA[24]).x) / shW * 100);
+  }
+  let minW = shW;
+  for (const i of vi) { if (i < start || i > top) continue; minW = Math.min(minW, Math.abs(F(i).p[11].x - F(i).p[12].x)); }
+  const turn = Math.acos(Math.min(1, Math.max(0, minW / shW))) * 180 / Math.PI;
+  const posture = impact > top ? Math.abs(spineLean(F(impact).p) - spineLean(pA)) : null;
+
+  return { a, start, top, impact, finish, tempo, head, hip, turn, posture };
+}
+
+function drawSkeleton(c, pts, w, h) {
+  c.strokeStyle = '#FEDD00';
+  c.lineWidth = 2.5;
+  c.lineCap = 'round';
+  BONES.forEach(([i, j]) => {
+    const a = pts[i], b = pts[j];
+    if (!a || !b || (a.visibility ?? 1) < 0.4 || (b.visibility ?? 1) < 0.4) return;
+    c.beginPath(); c.moveTo(a.x * w, a.y * h); c.lineTo(b.x * w, b.y * h); c.stroke();
+  });
+  if (pts[0] && (pts[0].visibility ?? 1) > 0.4) {
+    c.fillStyle = '#ffffff';
+    c.beginPath(); c.arc(pts[0].x * w, pts[0].y * h, 4, 0, Math.PI * 2); c.fill();
+  }
+}
+
+async function renderKeyframes(m, frames) {
+  const wrap = $id('keyframes');
+  wrap.innerHTML = '';
+  lastThumbs = [];
+  const keys = [['Address', m.a], ['Top', m.top], ['Impact', m.impact], ['Finish', m.finish]];
+  const w = 240, h = Math.max(2, Math.round(240 * vid.videoHeight / vid.videoWidth));
+  for (const [label, idx] of keys) {
+    const div = document.createElement('div');
+    div.className = 'kf';
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const lab = document.createElement('div');
+    lab.className = 'kf-label';
+    lab.textContent = label;
+    div.append(cv, lab);
+    wrap.appendChild(div);
+    if (idx < 0 || !frames[idx] || !frames[idx].p) { lab.textContent = label + ' ?'; continue; }
+    await seekTo(frames[idx].t);
+    const c = cv.getContext('2d');
+    c.drawImage(vid, 0, 0, w, h);
+    drawSkeleton(c, frames[idx].p, w, h);
+    lastThumbs.push({ label, src: cv.toDataURL('image/jpeg', 0.75) });
+  }
+}
+
+let lastMetrics = null;
+let lastThumbs = [];
+
+function renderComparison() {
+  if (!lastMetrics) return;
+  const p = PROS[$id('proSelect').value];
+  const m = lastMetrics;
+  $id('proName').textContent = p.name;
+  const fS = v => v == null ? '—' : Math.round(v) + '% of shoulders';
+  const rows = [
+    ['Tempo (back : down)', m.tempo ? m.tempo.toFixed(1) + ' : 1' : '—', p.tempo.toFixed(1) + ' : 1', m.tempo && Math.abs(m.tempo - p.tempo) <= 0.45],
+    ['Shoulder turn (est.)', '~' + Math.round(m.turn) + '°', '~' + p.turn + '°', m.turn >= p.turn - 30],
+    ['Head sway', fS(m.head), fS(p.head), m.head <= p.head + 18],
+    ['Hip sway', fS(m.hip), fS(p.hip), m.hip <= p.hip + 22],
+    ['Posture change', m.posture != null ? Math.round(m.posture) + '°' : '—', p.posture + '°', m.posture != null && m.posture <= p.posture + 5]
+  ];
+  $id('compareTable').innerHTML = `<table class="cmp-table">
+    <tr><th>Metric</th><th>You</th><th>${p.name.split(' ')[0]}</th><th></th></tr>
+    ${rows.map(r => `<tr><td>${r[0]}</td><td class="you">${r[1]}</td><td>${r[2]}</td><td>${r[3] ? '&#9989;' : '&#9888;&#65039;'}</td></tr>`).join('')}
+  </table>
+  <div class="pro-blurb"><b style="color:var(--gold)">${p.name}:</b> ${p.blurb}</div>`;
+}
+
+function effortLabel(e) { return e <= 1 ? 'Low effort' : e === 2 ? 'Medium effort' : 'Takes work'; }
+
+function renderTips(m) {
+  const faults = RULES.filter(r => r.test(m))
+    .sort((x, y) => y.sev(m) * (y.impact / y.effort) - x.sev(m) * (x.impact / x.effort))
+    .slice(0, 3);
+  const picks = [...faults];
+  for (const u of UNIVERSAL) {
+    if (picks.length >= 4) break;
+    if (u.id === 'tempo-u' && faults.some(f => f.id.startsWith('tempo'))) continue;
+    picks.push(u);
+  }
+  $id('tipsList').innerHTML = picks.map((t, i) => `
+    <div class="tip">
+      <div class="badges">
+        ${i === 0 ? '<span class="badge gold">&#127942; Best value</span>' : ''}
+        <span class="badge gold">Impact ${'&#9889;'.repeat(t.impact)}</span>
+        <span class="badge">${effortLabel(t.effort)}</span>
+        ${t.test ? '' : '<span class="badge">Every golfer</span>'}
+      </div>
+      <h3>${t.title}</h3>
+      <p>${t.why(m)}</p>
+      <p><b>Drill:</b> ${t.drill}</p>
+    </div>`).join('');
+}
+
+async function analyze() {
+  if (!vid.src || !vid.duration) {
+    status('Load a swing video on the <b>Analyze</b> tab first, then come back here.');
+    return;
+  }
+  aBtn.disabled = true;
+  $id('coachResults').hidden = true;
+  const t0 = vid.currentTime;
+  try {
+    status('Loading AI model&hellip; (first run downloads ~6&nbsp;MB)');
+    bar(0.02);
+    const lm = await getLandmarker();
+    vid.pause();
+    const ts = window.trim ? window.trim.start : 0;
+    const te = window.trim ? Math.min(vid.duration, window.trim.end) : vid.duration;
+    const dur = Math.min(Math.max(te - ts, 0.5), 15);
+    const n = Math.min(160, Math.max(40, Math.round(dur * 20)));
+    const off = document.createElement('canvas');
+    const sc = Math.min(1, 420 / vid.videoWidth);
+    off.width  = Math.max(2, Math.round(vid.videoWidth * sc));
+    off.height = Math.max(2, Math.round(vid.videoHeight * sc));
+    const octx = off.getContext('2d');
+    const frames = [];
+    for (let i = 0; i < n; i++) {
+      await seekTo(ts + i * dur / n);
+      octx.drawImage(vid, 0, 0, off.width, off.height);
+      const r = lm.detect(off);
+      const p = r.landmarks && r.landmarks[0];
+      frames.push({ t: ts + i * dur / n, p: goodPose(p) ? p : null });
+      status(`Tracking your body&hellip; frame ${i + 1}/${n}`);
+      bar(0.05 + 0.85 * (i + 1) / n);
+    }
+    const m = computeMetrics(frames);
+    if (!m) {
+      status('Couldn&#8217;t track a golfer in this clip — film face-on with your full body in frame and good light.');
+      bar(0);
+      return;
+    }
+    status('Building your report&hellip;');
+    bar(0.95);
+    await renderKeyframes(m, frames);
+    lastMetrics = m;
+    renderComparison();
+    renderTips(m);
+    $id('coachResults').hidden = false;
+    status('Done &#9989; Scroll down for your report.');
+    bar(1);
+  } catch (err) {
+    status('Analysis failed: ' + (err && err.message ? err.message : err) +
+      (navigator.onLine ? '' : ' — the AI model needs internet the first time it runs.'));
+    bar(0);
+  } finally {
+    aBtn.disabled = false;
+    vid.currentTime = t0;
+  }
+}
+
+/* ── save / load analyses (IndexedDB — holds the video blob too) ── */
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('swinglab', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('swings', { keyPath: 'id' });
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function idbTx(mode, fn) {
+  const db = await idbOpen();
+  return new Promise((res, rej) => {
+    const tx = db.transaction('swings', mode);
+    const req = fn(tx.objectStore('swings'));
+    tx.oncomplete = () => res(req && 'result' in req ? req.result : undefined);
+    tx.onerror = () => rej(tx.error);
+  });
+}
+const dbPut = rec => idbTx('readwrite', s => s.put(rec));
+const dbDel = id  => idbTx('readwrite', s => s.delete(id));
+const dbAll = ()  => idbTx('readonly',  s => s.getAll());
+
+$id('saveBtn').addEventListener('click', async () => {
+  if (!lastMetrics || !currentFile) { status('Run an analysis on a loaded video first.'); return; }
+  try {
+    const now = new Date();
+    await dbPut({
+      id: Date.now(),
+      date: now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' +
+            now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+      pro: $id('proSelect').value,
+      metrics: { ...lastMetrics },
+      thumbs: lastThumbs,
+      video: currentFile,
+      trim: { start: window.trim.start, end: Math.min(vid.duration || Infinity, window.trim.end) }
+    });
+    await renderSaved();
+    status('Saved &#9989; — clip and report stored on this device.');
+  } catch (e) {
+    status('Save failed: ' + (e && e.message ? e.message : e));
+  }
+});
+
+async function renderSaved() {
+  const list = $id('savedList');
+  let recs = [];
+  try { recs = await dbAll(); } catch {}
+  recs.sort((a, b) => b.id - a.id);
+  if (!recs.length) {
+    list.innerHTML = '<div class="empty-note" style="font-size:13px">Nothing saved yet &mdash; analyze a swing, then hit save.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  recs.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'saved-card';
+    const t = r.thumbs && r.thumbs[0];
+    card.innerHTML = `
+      ${t ? `<img src="${t.src}" alt="">` : ''}
+      <div class="info"><b>${r.date}</b><br>
+      Tempo ${r.metrics.tempo ? r.metrics.tempo.toFixed(1) + ' : 1' : '—'} &middot; vs ${PROS[r.pro].name}</div>
+      <button class="btn small">Load</button>
+      <button class="del">&times;</button>`;
+    card.querySelector('.btn').addEventListener('click', () => loadSaved(r));
+    card.querySelector('.del').addEventListener('click', async () => { await dbDel(r.id); renderSaved(); });
+    list.appendChild(card);
+  });
+}
+
+async function loadSaved(r) {
+  currentFile = r.video;
+  window.appLoadVideo(URL.createObjectURL(r.video));
+  await metadataReady();
+  if (r.trim && r.trim.end > r.trim.start) {
+    window.setTrim(r.trim.start, Math.min(vid.duration, r.trim.end),
+      `&#9986;&#65039; Trimmed to swing: ${r.trim.start.toFixed(1)}s &ndash; ${r.trim.end.toFixed(1)}s`);
+    vid.currentTime = r.trim.start;
+  }
+  lastMetrics = { ...r.metrics };
+  lastThumbs = r.thumbs || [];
+  $id('proSelect').value = r.pro;
+  $id('keyframes').innerHTML = lastThumbs.map(t =>
+    `<div class="kf"><img src="${t.src}" style="width:100%;display:block" alt=""><div class="kf-label">${t.label}</div></div>`).join('');
+  renderComparison();
+  renderTips(lastMetrics);
+  $id('coachResults').hidden = false;
+  status('Loaded saved swing &#9989; — the clip is on the Analyze tab too.');
+  bar(0);
+}
+
+renderSaved();
+
+aBtn.addEventListener('click', analyze);
+$id('proSelect').addEventListener('change', renderComparison);
+</script>
+</body>
+</html>

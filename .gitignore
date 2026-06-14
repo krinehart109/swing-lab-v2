@@ -1,0 +1,9 @@
+# Local Claude Code / dev-server config
+.claude/
+
+# macOS
+.DS_Store
+
+# Editor cruft
+*.swp
+.vscode/

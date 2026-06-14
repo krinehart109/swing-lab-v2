@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#0d0d0d"/>
+  <rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#FEDD00" stroke-width="10"/>
+
+  <!-- Flagstick -->
+  <line x1="318" y1="96" x2="318" y2="330" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>
+  <!-- Flag -->
+  <path d="M318 96 L210 138 L318 180 Z" fill="#FEDD00"/>
+
+  <!-- Green / ground swoosh -->
+  <path d="M70 380 Q256 320 442 380 L442 420 Q256 360 70 420 Z" fill="#FEDD00" opacity="0.9"/>
+
+  <!-- Golf ball -->
+  <circle cx="190" cy="330" r="58" fill="#ffffff"/>
+  <circle cx="172" cy="312" r="6" fill="#0d0d0d" opacity="0.25"/>
+  <circle cx="196" cy="306" r="6" fill="#0d0d0d" opacity="0.25"/>
+  <circle cx="184" cy="332" r="6" fill="#0d0d0d" opacity="0.25"/>
+  <circle cx="208" cy="328" r="6" fill="#0d0d0d" opacity="0.25"/>
+  <circle cx="170" cy="338" r="6" fill="#0d0d0d" opacity="0.25"/>
+  <circle cx="198" cy="352" r="6" fill="#0d0d0d" opacity="0.25"/>
+
+  <!-- Swing arc -->
+  <path d="M96 250 Q190 120 360 200" fill="none" stroke="#FEDD00" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 30"/>
+</svg>
