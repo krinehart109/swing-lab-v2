@@ -11,6 +11,18 @@ A golf swing trainer. Three tools:
 
 No build step, no dependencies — it's a single static page (`index.html` + manifest + icons).
 
+## Accounts (local multi-user)
+
+Swing Lab supports multiple players on a device, each with their own isolated swings, notes, and logs.
+
+- **First run** prompts you to create the **owner/admin** account.
+- **Sign in** by tapping your profile and entering your password (PBKDF2-hashed in the browser).
+- **Onboarding tutorial** — an animated, under-a-minute walkthrough plays on each player's first login. Replay it anytime from the account menu (▾ in the header).
+- **Admin panel** (account menu → Admin, owner only): see every player with swing/note counts, **add a player** (creates an account with a temporary password) or **email an invite** (opens your mail app with a join link the player taps on their own device), **reset** a password, **wipe** a player's data, or **delete** a user entirely.
+- **Capture guide** — the "📷 How to film a good swing" button on the Analyze screen explains how to get footage the AI can read.
+
+**Limitations of local accounts (by design, no backend):** accounts live in the browser on each device and don't sync across devices, and the password gate is light (data is readable by anyone with the unlocked device + dev tools). This model is ideal for a **shared device** — e.g. one iPad where several players each have a profile. For real cross-device login (Google/Apple) and synced data, the frontend can later point at a Supabase backend without a rewrite.
+
 ## Run it
 
 From this folder:
