@@ -11,17 +11,26 @@ A golf swing trainer. Three tools:
 
 No build step, no dependencies — it's a single static page (`index.html` + manifest + icons).
 
-## Accounts (local multi-user)
+## Accounts (cloud, Google sign-in)
 
-Swing Lab supports multiple players on a device, each with their own isolated swings, notes, and logs.
+Accounts run on **Supabase** (free tier). Each player signs in with **Google**; their notes and swing analyses sync to their account and follow them across devices. Access is **invite-only** — a player can sign in but can't use the app until an admin adds their email to the allowlist.
 
-- **First run** prompts you to create the **owner/admin** account.
-- **Sign in** by tapping your profile and entering your password (PBKDF2-hashed in the browser).
-- **Onboarding tutorial** — an animated, under-a-minute walkthrough plays on each player's first login. Replay it anytime from the account menu (▾ in the header).
-- **Admin panel** (account menu → Admin, owner only): see every player with swing/note counts, **add a player** (creates an account with a temporary password) or **email an invite** (opens your mail app with a join link the player taps on their own device), **reset** a password, **wipe** a player's data, or **delete** a user entirely.
-- **Capture guide** — the "📷 How to film a good swing" button on the Analyze screen explains how to get footage the AI can read.
+- **Sign in with Google** on first open. New accounts land on a "waiting for approval" screen until an admin approves them.
+- **Onboarding tutorial** — an animated, under-a-minute walkthrough on first login; replay from the account menu (▾).
+- **Admin panel** (account menu → Admin, admins only): see every player with swing/note counts, **approve/revoke** access, **make admin/player**, **wipe** a player's data, **remove** a player, and **invite by email** (adds them to the allowlist + opens your mail app with the app link).
+- **Capture guide** — "📷 How to film a good swing" on the Analyze screen.
 
-**Limitations of local accounts (by design, no backend):** accounts live in the browser on each device and don't sync across devices, and the password gate is light (data is readable by anyone with the unlocked device + dev tools). This model is ideal for a **shared device** — e.g. one iPad where several players each have a profile. For real cross-device login (Google/Apple) and synced data, the frontend can later point at a Supabase backend without a rewrite.
+**Data placement:** profiles, the allowlist, practice-log notes, and AI analysis (metrics + keyframe thumbnails) live in Supabase, isolated per user by Row-Level Security. **Swing video clips stay on-device** (IndexedDB, keyed by the cloud swing id) — so a saved swing shows "report only" on a device that doesn't have the clip. Backend config: see [`supabase/schema.sql`](supabase/schema.sql). The Supabase Project URL + publishable key are embedded in `index.html` (safe to expose; protected by RLS).
+
+**First-time admin bootstrap:** after the very first Google sign-in, run this once in the Supabase SQL Editor to make yourself the approved admin:
+
+```sql
+update public.profiles set role='admin', approved=true
+where id = (select id from public.profiles order by created_at asc limit 1);
+insert into public.allowlist (email)
+select email from public.profiles order by created_at asc limit 1
+on conflict do nothing;
+```
 
 ## Run it
 
