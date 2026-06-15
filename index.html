@@ -219,6 +219,9 @@
   .auth-card .btn { width: 100%; margin-top: 14px; }
   .auth-err { color: #ff8a8a; font-size: 13px; text-align: center; min-height: 18px; margin-top: 8px; }
   .auth-link { color: var(--gold); font-size: 13px; text-align: center; margin-top: 14px; cursor: pointer; }
+  .gbtn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 16px; background: #fff; color: #1f1f1f; border: none; border-radius: 10px; padding: 13px 16px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .gbtn:active { background: #ececec; }
+  .gbtn:disabled { opacity: 0.6; }
   .profile-list { display: flex; flex-direction: column; gap: 8px; }
   .profile-btn { display: flex; align-items: center; gap: 12px; background: var(--panel-2); border: 1px solid #3a3a3a; border-radius: 12px; padding: 12px; cursor: pointer; text-align: left; }
   .profile-btn:active { border-color: var(--gold); }
@@ -273,43 +276,23 @@
   <div class="auth-card">
     <svg class="auth-logo" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0d0d0d"/><rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#FEDD00" stroke-width="10"/><line x1="318" y1="96" x2="318" y2="330" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M318 96 L210 138 L318 180 Z" fill="#FEDD00"/><path d="M70 380 Q256 320 442 380 L442 420 Q256 360 70 420 Z" fill="#FEDD00" opacity="0.9"/><circle cx="190" cy="330" r="58" fill="#fff"/><path d="M96 250 Q190 120 360 200" fill="none" stroke="#FEDD00" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 30"/></svg>
 
-    <!-- First-run admin setup -->
-    <div id="viewSetup" hidden>
-      <h2>Welcome to Swing Lab</h2>
-      <div class="sub">Set up the owner account. You'll be the admin who can add players and manage the app.</div>
-      <label>Your name</label>
-      <input type="text" id="suName" autocomplete="name" placeholder="e.g. Kyle">
-      <label>Email</label>
-      <input type="text" id="suEmail" autocomplete="email" placeholder="you@example.com">
-      <label>Password</label>
-      <input type="password" id="suPass" autocomplete="new-password" placeholder="Choose a password">
-      <button class="btn" id="suBtn">Create admin account</button>
-      <div class="auth-err" id="suErr"></div>
+    <!-- Sign in -->
+    <div id="viewSignin" hidden>
+      <h2>Swing Lab</h2>
+      <div class="sub">Sign in to save your swings and notes to your account &mdash; on any device.</div>
+      <button class="gbtn" id="googleBtn">
+        <svg viewBox="0 0 18 18" width="18" height="18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+        Sign in with Google
+      </button>
+      <div class="auth-err" id="signinErr"></div>
     </div>
 
-    <!-- Profile picker / login -->
-    <div id="viewLogin" hidden>
-      <h2>Who's playing?</h2>
-      <div class="sub">Tap your profile to sign in.</div>
-      <div class="profile-list" id="profileList"></div>
-      <div id="pwBox" hidden>
-        <label id="pwLabel">Password</label>
-        <input type="password" id="loginPass" autocomplete="current-password" placeholder="Password">
-        <button class="btn" id="loginBtn">Sign in</button>
-      </div>
-      <div class="auth-err" id="loginErr"></div>
-    </div>
-
-    <!-- Invite redemption -->
-    <div id="viewInvite" hidden>
-      <h2>You're invited!</h2>
-      <div class="sub" id="invSub">Set up your player account.</div>
-      <label>Your name</label>
-      <input type="text" id="invName" autocomplete="name" placeholder="Your name">
-      <label>Password</label>
-      <input type="password" id="invPass" autocomplete="new-password" placeholder="Choose a password">
-      <button class="btn" id="invBtn">Create my account</button>
-      <div class="auth-err" id="invErr"></div>
+    <!-- Pending approval -->
+    <div id="viewPending" hidden>
+      <h2>Almost there</h2>
+      <div class="sub" id="pendingSub">Your account is waiting to be approved by the admin. You'll be able to sign in once you're added.</div>
+      <button class="btn ghost" id="pendingRefresh" style="width:100%; margin-top:8px">Check again</button>
+      <div class="auth-link" id="pendingSignout">Sign out</div>
     </div>
   </div>
 </div>
@@ -321,23 +304,19 @@
       <h2>&#9881;&#65039; Admin</h2>
       <button class="x" id="adminClose">&times;</button>
     </div>
-    <div class="sub" style="color:var(--gray); font-size:13px; margin-bottom:6px">Manage players, their swings, and accounts on this device.</div>
+    <div class="sub" style="color:var(--gray); font-size:13px; margin-bottom:6px">Approve players, manage their swings &amp; notes, and control who can sign in.</div>
     <div id="userRows"></div>
 
     <div class="admin-add">
-      <div style="font-size:13px; font-weight:700; margin-bottom:10px; color:var(--gold)">Add or invite a player</div>
-      <div class="form-row"><input type="text" id="adName" placeholder="Name"></div>
-      <div class="form-row"><input type="text" id="adEmail" placeholder="Email"></div>
-      <div class="form-row" style="align-items:center">
-        <select id="adRole" style="flex:1"><option value="user">Player</option><option value="admin">Admin</option></select>
-      </div>
+      <div style="font-size:13px; font-weight:700; margin-bottom:10px; color:var(--gold)">Invite a player</div>
+      <div class="form-row"><input type="text" id="adEmail" placeholder="Their Google email"></div>
       <div class="form-row" style="gap:8px">
-        <button class="btn small" id="adCreate" style="flex:1">Create now</button>
+        <button class="btn small" id="adApprove" style="flex:1">Add to allowlist</button>
         <button class="btn ghost small" id="adInvite" style="flex:1">&#9993;&#65039; Email invite</button>
       </div>
       <div class="admin-note" id="adNote">
-        <b>Create now</b> makes the account on <i>this</i> device with a temporary password you can share.
-        <b>Email invite</b> opens your mail app with a join link — the player taps it on their own device to set a password.
+        Players sign in with Google, but can only use Swing Lab once their email is on the allowlist.
+        <b>Add to allowlist</b> approves the email now; <b>Email invite</b> also opens your mail app with the app link to send them.
       </div>
     </div>
   </div>
@@ -848,8 +827,7 @@ function stopTempo() {
 }
 tempoBtn.addEventListener('click', () => tempoOn ? stopTempo() : startTempo());
 
-/* ═══════════ Practice Log ═══════════ */
-function logKey() { return 'swinglab-log:' + (window.SL && window.SL.uid ? window.SL.uid : '_guest'); }
+/* ═══════════ Practice Log (cloud-synced via window.SB) ═══════════ */
 let rating = 3;
 const starsEl = document.getElementById('stars');
 
@@ -859,23 +837,29 @@ function paintStars() {
 starsEl.querySelectorAll('span').forEach(s => s.addEventListener('click', () => { rating = +s.dataset.v; paintStars(); }));
 paintStars();
 
-function getLog()  { try { return JSON.parse(localStorage.getItem(logKey())) || []; } catch { return []; } }
-function setLog(l) { localStorage.setItem(logKey(), JSON.stringify(l)); }
-window.renderLog = renderLog;   // let the auth layer refresh on login/out
-
-document.getElementById('logSave').addEventListener('click', () => {
+document.getElementById('logSave').addEventListener('click', async () => {
+  if (!window.SB || !window.SB.user) { return; }
   const note = document.getElementById('logNote').value.trim();
   const club = document.getElementById('logClub').value;
-  const log = getLog();
-  log.unshift({ id: Date.now(), club, rating, note, date: new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) });
-  setLog(log);
-  document.getElementById('logNote').value = '';
-  renderLog();
+  const date = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  const btn = document.getElementById('logSave'); btn.disabled = true;
+  try {
+    await window.SB.noteAdd({ club, rating, note, date });
+    document.getElementById('logNote').value = '';
+    await renderLog();
+  } catch (e) { alert('Could not save note: ' + (e.message || e)); }
+  finally { btn.disabled = false; }
 });
 
-function renderLog() {
-  const log = getLog();
+async function renderLog() {
   const list = document.getElementById('logList');
+  if (!window.SB || !window.SB.user) {
+    list.innerHTML = '<div class="empty-note">Sign in to log your sessions.</div>';
+    return;
+  }
+  let log = [];
+  try { log = await window.SB.notesList(); }
+  catch { list.innerHTML = '<div class="empty-note">Could not load your log.</div>'; return; }
   if (!log.length) {
     list.innerHTML = '<div class="empty-note">No sessions yet &mdash; log your first range session above. &#9971;</div>';
     return;
@@ -883,17 +867,18 @@ function renderLog() {
   list.innerHTML = log.map(e => `
     <div class="entry">
       <div class="meta">
-        <span class="club">${e.club}</span>
-        <span>${e.date} <button class="del" data-id="${e.id}">&times;</button></span>
+        <span class="club">${e.club || ''}</span>
+        <span>${e.date || ''} <button class="del" data-id="${e.id}">&times;</button></span>
       </div>
-      <div class="entry-stars">${'★'.repeat(e.rating)}${'☆'.repeat(5 - e.rating)}</div>
+      <div class="entry-stars">${'★'.repeat(e.rating || 0)}${'☆'.repeat(5 - (e.rating || 0))}</div>
       ${e.note ? `<div class="note">${e.note.replace(/</g, '&lt;')}</div>` : ''}
     </div>`).join('');
-  list.querySelectorAll('.del').forEach(b => b.addEventListener('click', () => {
-    setLog(getLog().filter(e => e.id !== +b.dataset.id));
+  list.querySelectorAll('.del').forEach(b => b.addEventListener('click', async () => {
+    try { await window.SB.noteDelete(b.dataset.id); } catch (e) {}
     renderLog();
   }));
 }
+window.renderLog = renderLog;   // the auth layer calls this on login/out
 renderLog();
 
 /* ═══════════ Service worker (offline) ═══════════ */
@@ -1269,64 +1254,80 @@ const dbPut = rec => idbTx('readwrite', s => s.put(rec));
 const dbDel = id  => idbTx('readwrite', s => s.delete(id));
 const dbAll = ()  => idbTx('readonly',  s => s.getAll());
 
+/* Analysis metadata syncs to the cloud (window.SB); the video clip stays on this
+   device in IndexedDB keyed by the cloud swing id. */
+const dbGetVideo = async id => { try { return (await dbAll()).find(x => x.id === id)?.video || null; } catch { return null; } };
+
 $id('saveBtn').addEventListener('click', async () => {
+  if (!window.SB || !window.SB.user) { status('Sign in to save swings to your account.'); return; }
   if (!lastMetrics || !currentFile) { status('Run an analysis on a loaded video first.'); return; }
+  const btn = $id('saveBtn'); btn.disabled = true;
   try {
     const now = new Date();
-    await dbPut({
-      id: Date.now(),
-      userId: (window.SL && window.SL.uid) || '_guest',
-      date: now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' +
-            now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
-      pro: $id('proSelect').value,
-      metrics: { ...lastMetrics },
-      thumbs: lastThumbs,
-      video: currentFile,
+    const date = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' +
+                 now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    const row = await window.SB.swingAdd({
+      date, pro: $id('proSelect').value, metrics: { ...lastMetrics }, thumbs: lastThumbs,
       trim: { start: window.trim.start, end: Math.min(vid.duration || Infinity, window.trim.end) }
     });
+    try { await dbPut({ id: row.id, video: currentFile }); } catch {}
     await renderSaved();
-    status('Saved &#9989; — clip and report stored on this device.');
+    status('Saved &#9989; — report synced to your account; the clip stays on this device.');
   } catch (e) {
     status('Save failed: ' + (e && e.message ? e.message : e));
-  }
+  } finally { btn.disabled = false; }
 });
 
 async function renderSaved() {
   const list = $id('savedList');
+  if (!window.SB || !window.SB.user) {
+    list.innerHTML = '<div class="empty-note" style="font-size:13px">Sign in to save and sync your swings.</div>';
+    return;
+  }
   let recs = [];
-  try { recs = await dbAll(); } catch {}
-  const uid = (window.SL && window.SL.uid) || '_guest';
-  recs = recs.filter(r => (r.userId || '_guest') === uid);
-  recs.sort((a, b) => b.id - a.id);
+  try { recs = await window.SB.swingsList(); }
+  catch { list.innerHTML = '<div class="empty-note" style="font-size:13px">Could not load saved swings.</div>'; return; }
   if (!recs.length) {
     list.innerHTML = '<div class="empty-note" style="font-size:13px">Nothing saved yet &mdash; analyze a swing, then hit save.</div>';
     return;
   }
+  let localIds = new Set();
+  try { localIds = new Set((await dbAll()).map(r => r.id)); } catch {}
   list.innerHTML = '';
   recs.forEach(r => {
     const card = document.createElement('div');
     card.className = 'saved-card';
     const t = r.thumbs && r.thumbs[0];
+    const hasVideo = localIds.has(r.id);
     card.innerHTML = `
       ${t ? `<img src="${t.src}" alt="">` : ''}
-      <div class="info"><b>${r.date}</b><br>
-      Tempo ${r.metrics.tempo ? r.metrics.tempo.toFixed(1) + ' : 1' : '—'} &middot; vs ${PROS[r.pro].name}</div>
+      <div class="info"><b>${r.date || ''}</b><br>
+      Tempo ${r.metrics && r.metrics.tempo ? r.metrics.tempo.toFixed(1) + ' : 1' : '—'} &middot; vs ${PROS[r.pro] ? PROS[r.pro].name : r.pro}${hasVideo ? '' : ' &middot; <span style="color:#888">report only</span>'}</div>
       <button class="btn small">Load</button>
       <button class="del">&times;</button>`;
     card.querySelector('.btn').addEventListener('click', () => loadSaved(r));
-    card.querySelector('.del').addEventListener('click', async () => { await dbDel(r.id); renderSaved(); });
+    card.querySelector('.del').addEventListener('click', async () => {
+      try { await window.SB.swingDelete(r.id); } catch {}
+      try { await dbDel(r.id); } catch {}
+      renderSaved();
+    });
     list.appendChild(card);
   });
 }
 
 async function loadSaved(r) {
-  currentFile = r.video;
-  window.appLoadVideo(URL.createObjectURL(r.video));
-  await metadataReady();
-  if (r.trim && r.trim.end > r.trim.start) {
-    window.setTrim(r.trim.start, Math.min(vid.duration, r.trim.end),
-      `&#9986;&#65039; Trimmed to swing: ${r.trim.start.toFixed(1)}s &ndash; ${r.trim.end.toFixed(1)}s`);
-    vid.currentTime = r.trim.start;
+  const blob = await dbGetVideo(r.id);
+  if (blob) {
+    currentFile = blob;
+    window.appLoadVideo(URL.createObjectURL(blob));
+    await metadataReady();
+    if (r.trim && r.trim.end > r.trim.start) {
+      window.setTrim(r.trim.start, Math.min(vid.duration, r.trim.end),
+        `&#9986;&#65039; Trimmed to swing: ${r.trim.start.toFixed(1)}s &ndash; ${r.trim.end.toFixed(1)}s`);
+      vid.currentTime = r.trim.start;
+    }
+  } else {
+    currentFile = null;
   }
   lastMetrics = { ...r.metrics };
   lastThumbs = r.thumbs || [];
@@ -1336,287 +1337,317 @@ async function loadSaved(r) {
   renderComparison();
   renderTips(lastMetrics);
   $id('coachResults').hidden = false;
-  status('Loaded saved swing &#9989; — the clip is on the Analyze tab too.');
+  status(blob ? 'Loaded saved swing &#9989; — the clip is on the Analyze tab too.'
+              : 'Loaded report &#9989; — the video for this swing is saved on another device.');
   bar(0);
 }
 
 renderSaved();
 
-/* bridge for the auth/admin layer (other <script> block) */
-window.SwingDB = {
-  refresh: renderSaved,
-  countForUser: async uid => { try { return (await dbAll()).filter(r => (r.userId || '_guest') === uid).length; } catch { return 0; } },
-  deleteForUser: async uid => {
-    try { for (const r of (await dbAll()).filter(r => (r.userId || '_guest') === uid)) await dbDel(r.id); } catch {}
-    renderSaved();
-  }
-};
+/* bridge for the auth/admin layer */
+window.SwingDB = { refresh: renderSaved };
 window.dispatchEvent(new Event('swingdb-ready'));
 
 aBtn.addEventListener('click', analyze);
 $id('proSelect').addEventListener('change', renderComparison);
 </script>
 
-<script>
-/* ═══════════ Local accounts, admin, tutorial ═══════════ */
-(function () {
-  const LS_USERS = 'swinglab-users';
-  const LS_SESSION = 'swinglab-session';
-  const tutSeenKey = uid => 'swinglab-tut:' + uid;
-  const $ = id => document.getElementById(id);
-  const enc = new TextEncoder();
-  const buf2hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
-  const hex2buf = h => new Uint8Array(h.match(/.{2}/g).map(x => parseInt(x, 16)));
+<script type="module">
+/* ═══════════ Cloud accounts (Supabase) — auth, data, admin, tutorial ═══════════ */
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-  async function hashPw(pw, saltHex) {
-    const salt = saltHex ? hex2buf(saltHex) : crypto.getRandomValues(new Uint8Array(16));
-    const key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
-    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, key, 256);
-    return { salt: buf2hex(salt), hash: buf2hex(bits) };
-  }
+const SUPABASE_URL = 'https://mlcazbwdqxfytrpgxbvw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JSJNZ_n-11qusCBvxq5m1w_emKrLqcg';
+const APP_URL = location.origin + location.pathname;
 
-  const getUsers = () => { try { return JSON.parse(localStorage.getItem(LS_USERS)) || []; } catch { return []; } };
-  const setUsers = u => localStorage.setItem(LS_USERS, JSON.stringify(u));
-  const initial = n => ((n || '?').trim().charAt(0) || '?').toUpperCase();
-  const genId = () => 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const genTempPw = () => Math.random().toString(36).slice(2, 8);
-  const appUrl = () => location.origin + location.pathname;
+const $ = id => document.getElementById(id);
+const initial = n => ((n || '?').trim().charAt(0) || '?').toUpperCase();
 
-  function toast(msg) {
-    const t = document.createElement('div');
-    t.className = 'toast'; t.textContent = msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 2800);
-  }
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+function showOnly(view) {
+  ['viewSignin', 'viewPending'].forEach(v => $(v).hidden = v !== view);
+  $('authGate').hidden = false;
+}
 
-  function showOnly(view) {
-    ['viewSetup', 'viewLogin', 'viewInvite'].forEach(v => $(v).hidden = v !== view);
-    $('authGate').hidden = false;
-  }
+let supabase = null;
+try {
+  supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+} catch (e) { /* offline / lib failed to load */ }
 
-  function setSession(uid) {
-    localStorage.setItem(LS_SESSION, uid);
-    window.SL.uid = uid;
-    window.SL.user = getUsers().find(u => u.id === uid) || null;
-  }
-  function clearSession() { localStorage.removeItem(LS_SESSION); window.SL.uid = null; window.SL.user = null; }
+/* ---- data layer used by the rest of the app ---- */
+const SB = window.SB = {
+  ready: false,
+  client: supabase,
+  user: null,
 
-  function enterApp() {
-    $('authGate').hidden = true;
-    const u = window.SL.user;
-    $('userChip').style.display = 'flex';
-    $('ucAvatar').textContent = initial(u.name);
-    $('ucName').textContent = u.name;
-    $('umRole').textContent = u.role === 'admin' ? 'Admin' : 'Player';
-    $('umAdmin').hidden = u.role !== 'admin';
-    if (window.renderLog) window.renderLog();
-    if (window.SwingDB) window.SwingDB.refresh();
-    if (!localStorage.getItem(tutSeenKey(u.id))) startTutorial();
-  }
+  async notesList() {
+    const { data, error } = await supabase.from('notes').select('*').order('created_at', { ascending: false });
+    if (error) throw error; return data || [];
+  },
+  async noteAdd(o) {
+    const { error } = await supabase.from('notes').insert({ user_id: SB.user.id, club: o.club, rating: o.rating, note: o.note, date: o.date });
+    if (error) throw error;
+  },
+  async noteDelete(id) {
+    const { error } = await supabase.from('notes').delete().eq('id', id);
+    if (error) throw error;
+  },
 
-  /* ---- login ---- */
-  let pendingLoginUid = null;
-  function renderProfiles() {
-    const list = $('profileList'); list.innerHTML = '';
-    getUsers().forEach(u => {
-      const b = document.createElement('button');
-      b.className = 'profile-btn';
-      b.innerHTML = `<div class="avatar">${initial(u.name)}</div><div><div class="pb-name">${u.name}</div><div class="pb-role">${u.role === 'admin' ? 'Admin' : 'Player'}</div></div>`;
-      b.addEventListener('click', () => {
-        pendingLoginUid = u.id;
-        $('pwLabel').textContent = 'Password for ' + u.name;
-        $('pwBox').hidden = false;
-        $('loginErr').textContent = '';
-        $('loginPass').value = '';
-        $('loginPass').focus();
-      });
-      list.appendChild(b);
-    });
-  }
-  async function doLogin() {
-    const u = getUsers().find(x => x.id === pendingLoginUid);
-    if (!u) return;
-    const { hash } = await hashPw($('loginPass').value, u.salt);
-    if (hash === u.hash) { setSession(u.id); enterApp(); }
-    else $('loginErr').textContent = 'Incorrect password.';
-  }
+  async swingsList() {
+    const { data, error } = await supabase.from('swings').select('*').order('created_at', { ascending: false });
+    if (error) throw error; return data || [];
+  },
+  async swingAdd(o) {
+    const { data, error } = await supabase.from('swings')
+      .insert({ user_id: SB.user.id, date: o.date, pro: o.pro, metrics: o.metrics, thumbs: o.thumbs, trim: o.trim })
+      .select().single();
+    if (error) throw error; return data;
+  },
+  async swingDelete(id) {
+    const { error } = await supabase.from('swings').delete().eq('id', id);
+    if (error) throw error;
+  },
 
-  /* ---- first-run setup ---- */
-  async function doSetup() {
-    const name = $('suName').value.trim(), email = $('suEmail').value.trim(), pw = $('suPass').value;
-    if (!name || !email || pw.length < 4) { $('suErr').textContent = 'Fill in all fields (password 4+ characters).'; return; }
-    const { salt, hash } = await hashPw(pw);
-    const u = { id: genId(), name, email, role: 'admin', salt, hash, createdAt: Date.now() };
-    setUsers([u]);
-    const old = localStorage.getItem('swinglab-log');   // adopt any pre-accounts notes
-    if (old && !localStorage.getItem('swinglab-log:' + u.id)) { localStorage.setItem('swinglab-log:' + u.id, old); localStorage.removeItem('swinglab-log'); }
-    setSession(u.id); enterApp();
+  /* admin */
+  async adminProfiles() {
+    const { data, error } = await supabase.from('profiles').select('*').order('created_at');
+    if (error) throw error; return data || [];
+  },
+  async adminAllowlist() {
+    const { data } = await supabase.from('allowlist').select('email');
+    return (data || []).map(r => (r.email || '').toLowerCase());
+  },
+  async adminCounts() {
+    const out = {};
+    const [s, n] = await Promise.all([
+      supabase.from('swings').select('user_id'),
+      supabase.from('notes').select('user_id')
+    ]);
+    (s.data || []).forEach(r => { (out[r.user_id] ??= { swings: 0, notes: 0 }).swings++; });
+    (n.data || []).forEach(r => { (out[r.user_id] ??= { swings: 0, notes: 0 }).notes++; });
+    return out;
+  },
+  async adminApprove(email) {
+    email = email.toLowerCase();
+    await supabase.from('allowlist').upsert({ email });
+    await supabase.from('profiles').update({ approved: true }).eq('email', email);
+  },
+  async adminRevoke(email) {
+    email = email.toLowerCase();
+    await supabase.from('allowlist').delete().eq('email', email);
+    await supabase.from('profiles').update({ approved: false }).eq('email', email);
+  },
+  async adminSetRole(id, role) { await supabase.from('profiles').update({ role }).eq('id', id); },
+  async adminWipe(uid) {
+    await supabase.from('swings').delete().eq('user_id', uid);
+    await supabase.from('notes').delete().eq('user_id', uid);
+  },
+  async adminRemove(uid, email) {
+    await SB.adminWipe(uid);
+    if (email) await supabase.from('allowlist').delete().eq('email', email.toLowerCase());
+    await supabase.from('profiles').delete().eq('id', uid);
   }
+};
 
-  /* ---- invite redemption (data carried in the link, works cross-device) ---- */
-  let activeInvite = null;
-  function decodeJoin(raw) { try { return JSON.parse(atob(decodeURIComponent(raw))); } catch { return null; } }
-  async function doInvite() {
-    const name = $('invName').value.trim(), pw = $('invPass').value;
-    if (!name || pw.length < 4) { $('invErr').textContent = 'Enter a name and password (4+ characters).'; return; }
-    if (getUsers().some(u => u.email && activeInvite.email && u.email.toLowerCase() === activeInvite.email.toLowerCase())) {
-      $('invErr').textContent = 'An account for this email already exists on this device.'; return;
-    }
-    const { salt, hash } = await hashPw(pw);
-    const u = { id: genId(), name, email: activeInvite.email, role: activeInvite.role || 'user', salt, hash, createdAt: Date.now() };
-    const users = getUsers(); users.push(u); setUsers(users);
-    history.replaceState(null, '', appUrl());
-    setSession(u.id); enterApp();
+/* ---- auth ---- */
+async function loadProfile(authUser) {
+  for (let i = 0; i < 5; i++) {
+    const { data } = await supabase.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+    if (data) return data;
+    await new Promise(r => setTimeout(r, 400));
   }
+  return null;
+}
 
-  /* ---- admin ---- */
-  function openAdmin() { $('adminModal').hidden = false; renderUserRows(); }
-  async function renderUserRows() {
-    const rows = $('userRows'); rows.innerHTML = ''; const me = window.SL.uid;
-    for (const u of getUsers()) {
-      const swings = window.SwingDB ? await window.SwingDB.countForUser(u.id) : 0;
-      let notes = 0; try { notes = (JSON.parse(localStorage.getItem('swinglab-log:' + u.id)) || []).length; } catch {}
-      const row = document.createElement('div');
-      row.className = 'urow';
-      row.innerHTML = `
-        <div class="avatar">${initial(u.name)}</div>
-        <div class="u-meta"><b>${u.name}</b>${u.role === 'admin' ? ' &middot; <span style="color:var(--gold)">admin</span>' : ''}
-          <div class="u-sub">${u.email || 'no email'} &middot; ${swings} swing${swings === 1 ? '' : 's'} &middot; ${notes} note${notes === 1 ? '' : 's'}</div></div>
-        <div class="u-acts">
-          <button class="btn ghost small" data-act="reset">Reset PW</button>
-          <button class="btn ghost small" data-act="wipe">Wipe data</button>
-          <button class="btn danger small" data-act="del"${u.id === me ? ' disabled' : ''}>Delete</button>
-        </div>`;
-      row.querySelector('[data-act="reset"]').addEventListener('click', () => resetPw(u));
-      row.querySelector('[data-act="wipe"]').addEventListener('click', () => wipeUser(u));
-      if (u.id !== me) row.querySelector('[data-act="del"]').addEventListener('click', () => deleteUser(u));
-      rows.appendChild(row);
-    }
-  }
-  async function resetPw(u) {
-    const tmp = genTempPw();
-    const { salt, hash } = await hashPw(tmp);
-    const users = getUsers(); const i = users.findIndex(x => x.id === u.id);
-    users[i].salt = salt; users[i].hash = hash; setUsers(users);
-    if (confirm(`Reset ${u.name}'s password to:\n\n   ${tmp}\n\nClick OK to email it to ${u.email || 'them'}.`) && u.email) {
-      location.href = `mailto:${u.email}?subject=${encodeURIComponent('Your Swing Lab password')}&body=${encodeURIComponent('Your new temporary password is: ' + tmp)}`;
-    } else { toast('New password: ' + tmp); }
-  }
-  async function wipeUser(u) {
-    if (!confirm(`Delete ALL of ${u.name}'s swings and notes? This cannot be undone.`)) return;
-    localStorage.removeItem('swinglab-log:' + u.id);
-    if (window.SwingDB) await window.SwingDB.deleteForUser(u.id);
-    if (u.id === window.SL.uid && window.renderLog) window.renderLog();
-    renderUserRows(); toast(u.name + "'s data wiped");
-  }
-  async function deleteUser(u) {
-    if (!confirm(`Remove ${u.name} entirely — account plus all their swings and notes?`)) return;
-    localStorage.removeItem('swinglab-log:' + u.id);
-    if (window.SwingDB) await window.SwingDB.deleteForUser(u.id);
-    setUsers(getUsers().filter(x => x.id !== u.id));
-    renderUserRows(); toast(u.name + ' removed');
-  }
-  async function adminCreate() {
-    const name = $('adName').value.trim(), email = $('adEmail').value.trim(), role = $('adRole').value;
-    if (!name) { toast('Enter a name'); return; }
-    const tmp = genTempPw();
-    const { salt, hash } = await hashPw(tmp);
-    const users = getUsers();
-    users.push({ id: genId(), name, email, role, salt, hash, createdAt: Date.now() });
-    setUsers(users);
-    $('adName').value = ''; $('adEmail').value = '';
-    renderUserRows();
-    if (email && confirm(`Created ${name}. Temporary password:\n\n   ${tmp}\n\nClick OK to email the login details to ${email}.`)) {
-      location.href = `mailto:${email}?subject=${encodeURIComponent('Your Swing Lab account')}&body=${encodeURIComponent('You have a Swing Lab account.\n\nOpen: ' + appUrl() + '\nYour name: ' + name + '\nTemporary password: ' + tmp + '\n\nAfter signing in, add it to your home screen for one-tap access.')}`;
-    } else { toast(`${name} added · temp password: ${tmp}`); }
-  }
-  function adminInvite() {
-    const name = $('adName').value.trim(), email = $('adEmail').value.trim(), role = $('adRole').value;
-    if (!email) { toast('Enter an email to invite'); return; }
-    const payload = btoa(JSON.stringify({ email, role, name }));
-    const link = appUrl() + '?join=' + encodeURIComponent(payload);
-    $('adName').value = ''; $('adEmail').value = '';
-    location.href = `mailto:${email}?subject=${encodeURIComponent("You're invited to Swing Lab")}&body=${encodeURIComponent((name ? 'Hi ' + name + ',\n\n' : '') + 'You have been invited to Swing Lab. Open this link on your phone to set up your account:\n\n' + link + '\n\nThen tap Share -> Add to Home Screen for one-tap access.')}`;
-    toast('Invite email opened');
-  }
+function enterApp() {
+  $('authGate').hidden = true;
+  const u = SB.user;
+  $('userChip').style.display = 'flex';
+  $('ucAvatar').textContent = initial(u.name);
+  $('ucName').textContent = u.name;
+  $('umRole').textContent = u.role === 'admin' ? 'Admin' : 'Player';
+  $('umAdmin').hidden = u.role !== 'admin';
+  window.SL.uid = u.id; window.SL.user = u;
+  SB.ready = true;
+  if (window.renderLog) window.renderLog();
+  if (window.SwingDB) window.SwingDB.refresh();
+  if (!localStorage.getItem('swinglab-tut:' + u.id)) startTutorial();
+}
 
-  /* ---- tutorial (auto-advancing, < 1 min) ---- */
-  const SLIDES = [
-    { title: 'Welcome to Swing Lab', body: 'Your pocket swing coach. Record swings, get AI feedback, and dial in your tempo &mdash; all on your phone.',
-      art: `<svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#161616"/><rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#FEDD00" stroke-width="10"/><line x1="318" y1="96" x2="318" y2="330" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M318 96 L210 138 L318 180 Z" fill="#FEDD00"/><path d="M70 380 Q256 320 442 380 L442 420 Q256 360 70 420 Z" fill="#FEDD00" opacity="0.9"/><circle cx="190" cy="330" r="58" fill="#fff"/><path d="M96 250 Q190 120 360 200" fill="none" stroke="#FEDD00" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 30"/></svg>` },
-    { title: 'Break Down Your Swing', body: 'On <b>Analyze</b>, load a swing, slow it frame-by-frame, and draw lines, circles, and angles right on the video.',
-      art: `<svg viewBox="0 0 220 180"><rect x="20" y="15" width="180" height="150" rx="12" fill="#000" stroke="#333"/><g stroke="#bbb" stroke-width="4" stroke-linecap="round" fill="none"><line x1="110" y1="69" x2="110" y2="105"/><line x1="110" y1="80" x2="135" y2="70"/><line x1="110" y1="105" x2="98" y2="140"/><line x1="110" y1="105" x2="122" y2="140"/></g><circle cx="110" cy="60" r="9" fill="#bbb"/><line x1="135" y1="70" x2="162" y2="48" stroke="#fff" stroke-width="3"/><line x1="60" y1="150" x2="172" y2="44" stroke="#FEDD00" stroke-width="2.5" stroke-dasharray="170" stroke-dashoffset="170"><animate attributeName="stroke-dashoffset" from="170" to="0" dur="1.3s" fill="freeze"/></line><circle cx="95" cy="148" r="5" fill="#fff"/></svg>` },
-    { title: 'Your AI Coach', body: 'On <b>AI Coach</b>, it tracks your body, compares you to a tour pro, and ranks the highest-value fixes to work on.',
-      art: `<svg viewBox="0 0 220 180"><text x="110" y="22" fill="#FEDD00" font-size="14" font-weight="700" text-anchor="middle" font-family="sans-serif">YOU vs PRO</text><g stroke="#FEDD00" stroke-width="3" opacity="0.3" fill="none" stroke-linecap="round"><line x1="78" y1="63" x2="78" y2="100"/><line x1="78" y1="75" x2="103" y2="68"/><line x1="78" y1="100" x2="68" y2="135"/><line x1="78" y1="100" x2="90" y2="135"/></g><circle cx="78" cy="55" r="8" fill="#FEDD00" opacity="0.3"/><g stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"><line x1="128" y1="63" x2="128" y2="100"/><line x1="128" y1="75" x2="154" y2="66"/><line x1="128" y1="100" x2="118" y2="138"/><line x1="128" y1="100" x2="140" y2="138"/></g><circle cx="128" cy="55" r="8" fill="#fff"/><g fill="#FEDD00"><circle cx="128" cy="75" r="4"/><circle cx="128" cy="100" r="4"/><circle cx="154" cy="66" r="4"/><circle cx="118" cy="138" r="4"/><circle cx="140" cy="138" r="4"/></g></svg>` },
-    { title: 'Find Your Tempo', body: 'On <b>Tempo</b>, train the pro 3:1 rhythm with audio tones &mdash; the secret to consistent, repeatable contact.',
-      art: `<svg viewBox="0 0 220 180"><circle cx="110" cy="98" r="55" fill="none" stroke="#333" stroke-width="8"/><circle cx="110" cy="98" r="55" fill="none" stroke="#FEDD00" stroke-width="8" stroke-linecap="round" stroke-dasharray="259 345"><animateTransform attributeName="transform" type="rotate" from="-90 110 98" to="270 110 98" dur="3s" repeatCount="indefinite"/></circle><line x1="110" y1="43" x2="110" y2="31" stroke="#fff" stroke-width="5" stroke-linecap="round"/><text x="110" y="108" fill="#FEDD00" font-size="34" font-weight="800" text-anchor="middle" font-family="sans-serif">3:1</text></svg>` },
-    { title: 'Track Progress', body: 'On <b>Log</b>, save notes and star-rate every session so you can watch your game improve over time.',
-      art: `<svg viewBox="0 0 220 180"><rect x="62" y="22" width="96" height="134" rx="10" fill="#1f1f1f" stroke="#FEDD00" stroke-width="2"/><line x1="76" y1="48" x2="144" y2="48" stroke="#555" stroke-width="3"/><line x1="76" y1="66" x2="144" y2="66" stroke="#555" stroke-width="3"/><text x="110" y="108" fill="#FEDD00" font-size="20" text-anchor="middle" font-family="sans-serif">&#9733;&#9733;&#9733;&#9733;&#9734;</text><line x1="76" y1="134" x2="128" y2="134" stroke="#444" stroke-width="3"/></svg>` },
-    { title: 'Filming Tips', body: 'For the best AI results: film <b>face-on</b>, <b>full body</b> in frame, phone steady, good light. Tap &ldquo;How to film&rdquo; anytime.',
-      art: `<svg viewBox="0 0 220 180"><text x="110" y="20" fill="#FEDD00" font-size="12" font-weight="700" text-anchor="middle" font-family="sans-serif">FACE-ON &middot; FULL BODY</text><rect x="35" y="34" width="150" height="118" rx="10" fill="none" stroke="#FEDD00" stroke-width="2.5" stroke-dasharray="9 7"/><g stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"><line x1="110" y1="80" x2="110" y2="114"/><line x1="110" y1="90" x2="132" y2="82"/><line x1="110" y1="114" x2="100" y2="142"/><line x1="110" y1="114" x2="120" y2="142"/></g><circle cx="110" cy="71" r="9" fill="#fff"/></svg>` }
-  ];
-  let tutIdx = 0, tutTimer = null;
-  function startTutorial() { tutIdx = 0; $('tutorial').hidden = false; renderSlide(); }
-  function endTutorial() {
-    clearTimeout(tutTimer);
-    $('tutorial').hidden = true;
-    if (window.SL.user) localStorage.setItem(tutSeenKey(window.SL.user.id), '1');
+async function handleSession(session) {
+  if (SB.ready && SB.user && session && session.user && session.user.id === SB.user.id) return;
+  if (!session || !session.user) { SB.ready = false; SB.user = null; showOnly('viewSignin'); return; }
+  const prof = await loadProfile(session.user);
+  if (!prof) {
+    $('pendingSub').textContent = 'Setting up your account — tap "Check again" in a moment.';
+    SB.user = { id: session.user.id };
+    showOnly('viewPending'); return;
   }
-  function renderSlide() {
-    const s = SLIDES[tutIdx];
-    $('tutStage').innerHTML = s.art;
-    $('tutTitle').innerHTML = s.title;
-    $('tutBody').innerHTML = s.body;
-    $('tutDots').innerHTML = SLIDES.map((_, i) => `<span class="${i === tutIdx ? 'on' : ''}"></span>`).join('');
-    $('tutPrev').style.visibility = tutIdx === 0 ? 'hidden' : 'visible';
-    $('tutNext').textContent = tutIdx === SLIDES.length - 1 ? "Let's go" : 'Next';
-    clearTimeout(tutTimer);
-    if (tutIdx < SLIDES.length - 1) tutTimer = setTimeout(() => { tutIdx++; renderSlide(); }, 8500);
+  if (!prof.approved) {
+    SB.user = { id: prof.id, email: prof.email };
+    $('pendingSub').textContent = `Signed in as ${prof.email}. Your account is waiting to be approved by the admin — you'll get in once your email is added to the allowlist.`;
+    showOnly('viewPending'); return;
   }
+  SB.user = { id: prof.id, email: prof.email, name: prof.name || (prof.email || 'Player').split('@')[0], role: prof.role, approved: true };
+  enterApp();
+}
 
-  /* ---- wiring ---- */
-  $('suBtn').addEventListener('click', doSetup);
-  $('suPass').addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
-  $('loginBtn').addEventListener('click', doLogin);
-  $('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-  $('invBtn').addEventListener('click', doInvite);
-  $('ucToggle').addEventListener('click', () => { $('userMenu').hidden = !$('userMenu').hidden; });
-  document.addEventListener('click', e => { if (!$('userChip').contains(e.target)) $('userMenu').hidden = true; });
-  $('umLogout').addEventListener('click', () => { clearSession(); $('userChip').style.display = 'none'; $('userMenu').hidden = true; boot(); });
-  $('umAdmin').addEventListener('click', () => { $('userMenu').hidden = true; openAdmin(); });
-  $('umTutorial').addEventListener('click', () => { $('userMenu').hidden = true; startTutorial(); });
-  $('adminClose').addEventListener('click', () => $('adminModal').hidden = true);
-  $('adCreate').addEventListener('click', adminCreate);
-  $('adInvite').addEventListener('click', adminInvite);
-  $('tutPrev').addEventListener('click', () => { if (tutIdx > 0) { tutIdx--; renderSlide(); } });
-  $('tutNext').addEventListener('click', () => { if (tutIdx < SLIDES.length - 1) { tutIdx++; renderSlide(); } else endTutorial(); });
-  $('tutSkip').addEventListener('click', endTutorial);
-  $('howToFilm').addEventListener('click', () => $('captureModal').hidden = false);
-  $('capClose').addEventListener('click', () => $('captureModal').hidden = true);
-  $('capLoad').addEventListener('click', () => { $('captureModal').hidden = true; document.getElementById('fileInput').click(); });
+async function boot() {
+  if (!supabase) { showOnly('viewSignin'); $('signinErr').textContent = 'Could not reach the sign-in service. Check your connection and reload.'; return; }
+  showOnly('viewSignin');
+  try {
+    const { data } = await supabase.auth.getSession();
+    await handleSession(data.session);
+  } catch (e) { /* ignore */ }
+  supabase.auth.onAuthStateChange((_event, session) => {
+    if (SB.ready && session) return;
+    handleSession(session);
+  });
+}
 
-  /* ---- boot ---- */
-  function boot() {
-    const join = new URLSearchParams(location.search).get('join');
-    if (join) {
-      const inv = decodeJoin(join);
-      if (inv && inv.email) {
-        activeInvite = inv;
-        $('invName').value = inv.name || '';
-        $('invSub').textContent = 'Set up your Swing Lab account for ' + inv.email;
-        showOnly('viewInvite'); return;
-      }
-    }
-    const users = getUsers();
-    if (!users.length) { showOnly('viewSetup'); return; }
-    const sess = localStorage.getItem(LS_SESSION);
-    if (sess && users.find(u => u.id === sess)) { setSession(sess); enterApp(); return; }
-    $('pwBox').hidden = true; renderProfiles(); showOnly('viewLogin');
-  }
+/* ---- admin UI ---- */
+function openAdmin() { $('adminModal').hidden = false; renderUserRows(); }
+async function renderUserRows() {
+  const rows = $('userRows');
+  rows.innerHTML = '<div class="empty-note" style="font-size:13px">Loading…</div>';
+  let profiles, allow, counts;
+  try { [profiles, allow, counts] = await Promise.all([SB.adminProfiles(), SB.adminAllowlist(), SB.adminCounts()]); }
+  catch (e) { rows.innerHTML = '<div class="empty-note" style="font-size:13px">Could not load users.</div>'; return; }
+  rows.innerHTML = '';
+  profiles.forEach(u => {
+    const c = counts[u.id] || { swings: 0, notes: 0 };
+    const isMe = u.id === SB.user.id;
+    const row = document.createElement('div');
+    row.className = 'urow';
+    row.innerHTML = `
+      <div class="avatar">${initial(u.name)}</div>
+      <div class="u-meta"><b>${u.name || '(no name)'}</b>${u.role === 'admin' ? ' &middot; <span style="color:var(--gold)">admin</span>' : ''}${u.approved ? '' : ' &middot; <span style="color:#ff8a8a">pending</span>'}
+        <div class="u-sub">${u.email || ''} &middot; ${c.swings} swing${c.swings === 1 ? '' : 's'} &middot; ${c.notes} note${c.notes === 1 ? '' : 's'}</div></div>
+      <div class="u-acts">
+        <button class="btn ${u.approved ? 'ghost' : ''} small" data-a="approve">${u.approved ? 'Revoke' : 'Approve'}</button>
+        <button class="btn ghost small" data-a="role">${u.role === 'admin' ? 'Make player' : 'Make admin'}</button>
+        <button class="btn ghost small" data-a="wipe">Wipe</button>
+        <button class="btn danger small" data-a="del"${isMe ? ' disabled' : ''}>Remove</button>
+      </div>`;
+    row.querySelector('[data-a="approve"]').onclick = async () => {
+      try { if (u.approved) await SB.adminRevoke(u.email); else await SB.adminApprove(u.email); } catch (e) { toast('Failed: ' + (e.message || e)); }
+      renderUserRows();
+    };
+    row.querySelector('[data-a="role"]').onclick = async () => {
+      if (isMe && u.role === 'admin' && !confirm('Remove your own admin access?')) return;
+      try { await SB.adminSetRole(u.id, u.role === 'admin' ? 'user' : 'admin'); } catch (e) { toast('Failed: ' + (e.message || e)); }
+      renderUserRows();
+    };
+    row.querySelector('[data-a="wipe"]').onclick = async () => {
+      if (!confirm(`Delete all of ${u.name || u.email}'s swings and notes?`)) return;
+      try { await SB.adminWipe(u.id); } catch (e) { toast('Failed: ' + (e.message || e)); }
+      if (u.id === SB.user.id) { if (window.renderLog) window.renderLog(); if (window.SwingDB) window.SwingDB.refresh(); }
+      renderUserRows(); toast('Data wiped');
+    };
+    const del = row.querySelector('[data-a="del"]');
+    if (!isMe) del.onclick = async () => {
+      if (!confirm(`Remove ${u.name || u.email}? Deletes their profile, swings, notes, and allowlist entry.`)) return;
+      try { await SB.adminRemove(u.id, u.email); } catch (e) { toast('Failed: ' + (e.message || e)); }
+      renderUserRows(); toast('Player removed');
+    };
+    rows.appendChild(row);
+  });
+}
+async function adminApproveEmail() {
+  const email = $('adEmail').value.trim();
+  if (!email) { toast('Enter an email'); return; }
+  try { await SB.adminApprove(email); $('adEmail').value = ''; renderUserRows(); toast(email + ' approved'); }
+  catch (e) { toast('Failed: ' + (e.message || e)); }
+}
+function adminInvite() {
+  const email = $('adEmail').value.trim();
+  if (!email) { toast('Enter an email to invite'); return; }
+  SB.adminApprove(email).then(() => renderUserRows()).catch(() => {});
+  location.href = `mailto:${email}?subject=${encodeURIComponent("You're invited to Swing Lab")}&body=${encodeURIComponent('You have been added to Swing Lab. Open this on your phone and tap "Sign in with Google":\n\n' + APP_URL + '\n\nThen tap Share -> Add to Home Screen for one-tap access.')}`;
+  $('adEmail').value = '';
+  toast('Invite email opened · approved');
+}
 
-  window.SwingAuth = { boot, getUsers, startTutorial };
-  boot();
-})();
+/* ---- tutorial (auto-advancing, < 1 min) ---- */
+const SLIDES = [
+  { title: 'Welcome to Swing Lab', body: 'Your pocket swing coach. Record swings, get AI feedback, and dial in your tempo &mdash; all on your phone.',
+    art: `<svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#161616"/><rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#FEDD00" stroke-width="10"/><line x1="318" y1="96" x2="318" y2="330" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M318 96 L210 138 L318 180 Z" fill="#FEDD00"/><path d="M70 380 Q256 320 442 380 L442 420 Q256 360 70 420 Z" fill="#FEDD00" opacity="0.9"/><circle cx="190" cy="330" r="58" fill="#fff"/><path d="M96 250 Q190 120 360 200" fill="none" stroke="#FEDD00" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 30"/></svg>` },
+  { title: 'Break Down Your Swing', body: 'On <b>Analyze</b>, load a swing, slow it frame-by-frame, and draw lines, circles, and angles right on the video.',
+    art: `<svg viewBox="0 0 220 180"><rect x="20" y="15" width="180" height="150" rx="12" fill="#000" stroke="#333"/><g stroke="#bbb" stroke-width="4" stroke-linecap="round" fill="none"><line x1="110" y1="69" x2="110" y2="105"/><line x1="110" y1="80" x2="135" y2="70"/><line x1="110" y1="105" x2="98" y2="140"/><line x1="110" y1="105" x2="122" y2="140"/></g><circle cx="110" cy="60" r="9" fill="#bbb"/><line x1="135" y1="70" x2="162" y2="48" stroke="#fff" stroke-width="3"/><line x1="60" y1="150" x2="172" y2="44" stroke="#FEDD00" stroke-width="2.5" stroke-dasharray="170" stroke-dashoffset="170"><animate attributeName="stroke-dashoffset" from="170" to="0" dur="1.3s" fill="freeze"/></line><circle cx="95" cy="148" r="5" fill="#fff"/></svg>` },
+  { title: 'Your AI Coach', body: 'On <b>AI Coach</b>, it tracks your body, compares you to a tour pro, and ranks the highest-value fixes to work on.',
+    art: `<svg viewBox="0 0 220 180"><text x="110" y="22" fill="#FEDD00" font-size="14" font-weight="700" text-anchor="middle" font-family="sans-serif">YOU vs PRO</text><g stroke="#FEDD00" stroke-width="3" opacity="0.3" fill="none" stroke-linecap="round"><line x1="78" y1="63" x2="78" y2="100"/><line x1="78" y1="75" x2="103" y2="68"/><line x1="78" y1="100" x2="68" y2="135"/><line x1="78" y1="100" x2="90" y2="135"/></g><circle cx="78" cy="55" r="8" fill="#FEDD00" opacity="0.3"/><g stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"><line x1="128" y1="63" x2="128" y2="100"/><line x1="128" y1="75" x2="154" y2="66"/><line x1="128" y1="100" x2="118" y2="138"/><line x1="128" y1="100" x2="140" y2="138"/></g><circle cx="128" cy="55" r="8" fill="#fff"/><g fill="#FEDD00"><circle cx="128" cy="75" r="4"/><circle cx="128" cy="100" r="4"/><circle cx="154" cy="66" r="4"/><circle cx="118" cy="138" r="4"/><circle cx="140" cy="138" r="4"/></g></svg>` },
+  { title: 'Find Your Tempo', body: 'On <b>Tempo</b>, train the pro 3:1 rhythm with audio tones &mdash; the secret to consistent, repeatable contact.',
+    art: `<svg viewBox="0 0 220 180"><circle cx="110" cy="98" r="55" fill="none" stroke="#333" stroke-width="8"/><circle cx="110" cy="98" r="55" fill="none" stroke="#FEDD00" stroke-width="8" stroke-linecap="round" stroke-dasharray="259 345"><animateTransform attributeName="transform" type="rotate" from="-90 110 98" to="270 110 98" dur="3s" repeatCount="indefinite"/></circle><line x1="110" y1="43" x2="110" y2="31" stroke="#fff" stroke-width="5" stroke-linecap="round"/><text x="110" y="108" fill="#FEDD00" font-size="34" font-weight="800" text-anchor="middle" font-family="sans-serif">3:1</text></svg>` },
+  { title: 'Track Progress', body: 'On <b>Log</b>, save notes and star-rate every session. Your swings &amp; notes sync to your account on any device.',
+    art: `<svg viewBox="0 0 220 180"><rect x="62" y="22" width="96" height="134" rx="10" fill="#1f1f1f" stroke="#FEDD00" stroke-width="2"/><line x1="76" y1="48" x2="144" y2="48" stroke="#555" stroke-width="3"/><line x1="76" y1="66" x2="144" y2="66" stroke="#555" stroke-width="3"/><text x="110" y="108" fill="#FEDD00" font-size="20" text-anchor="middle" font-family="sans-serif">&#9733;&#9733;&#9733;&#9733;&#9734;</text><line x1="76" y1="134" x2="128" y2="134" stroke="#444" stroke-width="3"/></svg>` },
+  { title: 'Filming Tips', body: 'For the best AI results: film <b>face-on</b>, <b>full body</b> in frame, phone steady, good light. Tap &ldquo;How to film&rdquo; anytime.',
+    art: `<svg viewBox="0 0 220 180"><text x="110" y="20" fill="#FEDD00" font-size="12" font-weight="700" text-anchor="middle" font-family="sans-serif">FACE-ON &middot; FULL BODY</text><rect x="35" y="34" width="150" height="118" rx="10" fill="none" stroke="#FEDD00" stroke-width="2.5" stroke-dasharray="9 7"/><g stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"><line x1="110" y1="80" x2="110" y2="114"/><line x1="110" y1="90" x2="132" y2="82"/><line x1="110" y1="114" x2="100" y2="142"/><line x1="110" y1="114" x2="120" y2="142"/></g><circle cx="110" cy="71" r="9" fill="#fff"/></svg>` }
+];
+let tutIdx = 0, tutTimer = null;
+function startTutorial() { tutIdx = 0; $('tutorial').hidden = false; renderSlide(); }
+function endTutorial() {
+  clearTimeout(tutTimer);
+  $('tutorial').hidden = true;
+  if (SB.user && SB.user.id) localStorage.setItem('swinglab-tut:' + SB.user.id, '1');
+}
+function renderSlide() {
+  const s = SLIDES[tutIdx];
+  $('tutStage').innerHTML = s.art;
+  $('tutTitle').innerHTML = s.title;
+  $('tutBody').innerHTML = s.body;
+  $('tutDots').innerHTML = SLIDES.map((_, i) => `<span class="${i === tutIdx ? 'on' : ''}"></span>`).join('');
+  $('tutPrev').style.visibility = tutIdx === 0 ? 'hidden' : 'visible';
+  $('tutNext').textContent = tutIdx === SLIDES.length - 1 ? "Let's go" : 'Next';
+  clearTimeout(tutTimer);
+  if (tutIdx < SLIDES.length - 1) tutTimer = setTimeout(() => { tutIdx++; renderSlide(); }, 8500);
+}
+
+/* ---- wiring ---- */
+async function signOut() {
+  try { await supabase.auth.signOut(); } catch (e) {}
+  SB.ready = false; SB.user = null; window.SL.uid = null; window.SL.user = null;
+  $('userChip').style.display = 'none'; $('userMenu').hidden = true;
+  if (window.renderLog) window.renderLog();
+  if (window.SwingDB) window.SwingDB.refresh();
+  showOnly('viewSignin');
+}
+
+$('googleBtn').addEventListener('click', async () => {
+  $('signinErr').textContent = '';
+  $('googleBtn').disabled = true;
+  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: APP_URL } });
+  if (error) { $('signinErr').textContent = error.message; $('googleBtn').disabled = false; }
+});
+$('pendingRefresh').addEventListener('click', async () => {
+  const { data } = await supabase.auth.getSession();
+  SB.ready = false;
+  await handleSession(data.session);
+});
+$('pendingSignout').addEventListener('click', signOut);
+$('umLogout').addEventListener('click', signOut);
+$('ucToggle').addEventListener('click', () => { $('userMenu').hidden = !$('userMenu').hidden; });
+document.addEventListener('click', e => { if (!$('userChip').contains(e.target)) $('userMenu').hidden = true; });
+$('umAdmin').addEventListener('click', () => { $('userMenu').hidden = true; openAdmin(); });
+$('umTutorial').addEventListener('click', () => { $('userMenu').hidden = true; startTutorial(); });
+$('adminClose').addEventListener('click', () => $('adminModal').hidden = true);
+$('adApprove').addEventListener('click', adminApproveEmail);
+$('adInvite').addEventListener('click', adminInvite);
+$('tutPrev').addEventListener('click', () => { if (tutIdx > 0) { tutIdx--; renderSlide(); } });
+$('tutNext').addEventListener('click', () => { if (tutIdx < SLIDES.length - 1) { tutIdx++; renderSlide(); } else endTutorial(); });
+$('tutSkip').addEventListener('click', endTutorial);
+$('howToFilm').addEventListener('click', () => $('captureModal').hidden = false);
+$('capClose').addEventListener('click', () => $('captureModal').hidden = true);
+$('capLoad').addEventListener('click', () => { $('captureModal').hidden = true; document.getElementById('fileInput').click(); });
+
+window.SwingAuth = { boot, startTutorial, signOut };
+boot();
 </script>
 </body>
 </html>
