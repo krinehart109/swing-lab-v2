@@ -1,4 +1,4 @@
-const CACHE = 'swinglab-v7';
+const CACHE = 'swinglab-v8';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

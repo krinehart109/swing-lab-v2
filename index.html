@@ -1478,7 +1478,10 @@ function enterApp() {
   SB.ready = true;
   if (window.renderLog) window.renderLog();
   if (window.SwingDB) window.SwingDB.refresh();
-  if (!localStorage.getItem('swinglab-tut:' + u.id)) startTutorial();
+  if (!localStorage.getItem('swinglab-tut:' + u.id)) {
+    localStorage.setItem('swinglab-tut:' + u.id, '1');  // first login only — never auto-show again
+    startTutorial();
+  }
 }
 
 async function handleSession(session) {
