@@ -196,13 +196,199 @@
   .saved-card .info { flex: 1; font-size: 12px; color: var(--gray); line-height: 1.5; }
   .saved-card .info b { color: var(--white); font-size: 13px; }
   .saved-card .del { background: none; border: none; color: #777; font-size: 18px; cursor: pointer; padding: 0 4px; }
+
+  /* ── User chip + menu (header) ──────── */
+  #userChip { margin-left: auto; display: none; align-items: center; gap: 8px; position: relative; }
+  #userChip .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--gold); color: #000; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  #userChip .uc-name { font-size: 13px; font-weight: 600; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #userChip .uc-btn { background: none; border: none; color: var(--gray); font-size: 18px; cursor: pointer; padding: 2px 4px; }
+  #userMenu { position: absolute; top: 38px; right: 0; background: var(--panel-2); border: 1px solid #3a3a3a; border-radius: 10px; padding: 6px; min-width: 180px; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+  #userMenu button { display: flex; align-items: center; gap: 8px; width: 100%; background: none; border: none; color: var(--white); font-size: 14px; text-align: left; padding: 10px; border-radius: 8px; cursor: pointer; }
+  #userMenu button:active { background: #333; }
+  #userMenu .role-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--gold); padding: 4px 10px; }
+
+  /* ── Overlays (auth, admin, tutorial, capture) ── */
+  .overlay { position: fixed; inset: 0; background: rgba(8,8,8,0.96); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; padding-top: calc(var(--safe-top) + 24px); padding-bottom: calc(var(--safe-bottom) + 24px); }
+  .overlay[hidden] { display: none !important; }
+  .auth-card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid #333; border-radius: 16px; padding: 22px; }
+  .auth-logo { width: 54px; height: 54px; display: block; margin: 0 auto 10px; }
+  .auth-card h2 { color: var(--gold); text-align: center; margin-bottom: 4px; }
+  .auth-card .sub { text-align: center; color: var(--gray); font-size: 13px; margin-bottom: 16px; line-height: 1.5; }
+  .auth-card label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--gray); display: block; margin: 10px 0 5px; }
+  .auth-card input { margin-bottom: 4px; }
+  .auth-card .btn { width: 100%; margin-top: 14px; }
+  .auth-err { color: #ff8a8a; font-size: 13px; text-align: center; min-height: 18px; margin-top: 8px; }
+  .auth-link { color: var(--gold); font-size: 13px; text-align: center; margin-top: 14px; cursor: pointer; }
+  .profile-list { display: flex; flex-direction: column; gap: 8px; }
+  .profile-btn { display: flex; align-items: center; gap: 12px; background: var(--panel-2); border: 1px solid #3a3a3a; border-radius: 12px; padding: 12px; cursor: pointer; text-align: left; }
+  .profile-btn:active { border-color: var(--gold); }
+  .profile-btn .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--gold); color: #000; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .profile-btn .pb-name { font-size: 16px; font-weight: 700; color: var(--white); }
+  .profile-btn .pb-role { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Modals (admin, capture) ────────── */
+  .modal-card { width: 100%; max-width: 460px; max-height: 100%; overflow-y: auto; background: var(--panel); border: 1px solid #333; border-radius: 16px; padding: 20px; }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .modal-head h2 { margin: 0; }
+  .modal-head .x { background: none; border: none; color: var(--gray); font-size: 26px; line-height: 1; cursor: pointer; }
+  .urow { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid #333; border-radius: 10px; padding: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .urow .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: #000; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .urow .u-meta { flex: 1; min-width: 120px; }
+  .urow .u-meta b { font-size: 14px; }
+  .urow .u-meta .u-sub { font-size: 11px; color: var(--gray); }
+  .urow .u-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .urow .u-acts .btn { padding: 6px 9px; font-size: 11px; }
+  .admin-add { background: var(--panel-2); border: 1px dashed #444; border-radius: 12px; padding: 14px; margin-top: 14px; }
+  .admin-add .form-row { gap: 8px; margin-bottom: 8px; }
+  .admin-note { font-size: 11px; color: #888; line-height: 1.5; margin-top: 10px; }
+  .toast { position: fixed; left: 50%; bottom: calc(var(--safe-bottom) + 70px); transform: translateX(-50%); background: var(--gold); color: #000; font-weight: 700; font-size: 13px; padding: 10px 16px; border-radius: 24px; z-index: 200; box-shadow: 0 6px 20px rgba(0,0,0,0.5); }
+
+  /* ── Tutorial ───────────────────────── */
+  #tutorial .tut-card { width: 100%; max-width: 400px; background: var(--panel); border: 1px solid #333; border-radius: 18px; padding: 22px; text-align: center; }
+  .tut-stage { height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .tut-stage svg { width: 100%; height: 100%; }
+  .tut-title { font-size: 20px; font-weight: 800; color: var(--gold); margin-bottom: 6px; }
+  .tut-body { font-size: 14px; color: #ccc; line-height: 1.5; min-height: 64px; }
+  .tut-dots { display: flex; gap: 7px; justify-content: center; margin: 16px 0; }
+  .tut-dots span { width: 8px; height: 8px; border-radius: 50%; background: #444; transition: background 0.2s, width 0.2s; }
+  .tut-dots span.on { background: var(--gold); width: 20px; border-radius: 4px; }
+  .tut-nav { display: flex; gap: 8px; }
+  .tut-nav .btn { flex: 1; }
+  .tut-skip { color: var(--gray); font-size: 12px; margin-top: 14px; cursor: pointer; }
+
+  /* ── Capture guide ──────────────────── */
+  .cap-step { display: flex; gap: 12px; align-items: flex-start; margin-top: 12px; }
+  .cap-step .num { width: 26px; height: 26px; border-radius: 50%; background: var(--gold); color: #000; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .cap-step .ct b { color: var(--white); font-size: 14px; }
+  .cap-step .ct p { color: var(--gray); font-size: 13px; line-height: 1.45; margin-top: 2px; }
+  #howToFilm { background: none; border: 1px solid var(--gold); color: var(--gold); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 12px; }
 </style>
 </head>
 <body>
 
+<script>window.SL = window.SL || { uid: null, user: null };</script>
+
+<!-- ════════ AUTH GATE ════════ -->
+<div id="authGate" class="overlay" hidden>
+  <div class="auth-card">
+    <svg class="auth-logo" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0d0d0d"/><rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#FEDD00" stroke-width="10"/><line x1="318" y1="96" x2="318" y2="330" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M318 96 L210 138 L318 180 Z" fill="#FEDD00"/><path d="M70 380 Q256 320 442 380 L442 420 Q256 360 70 420 Z" fill="#FEDD00" opacity="0.9"/><circle cx="190" cy="330" r="58" fill="#fff"/><path d="M96 250 Q190 120 360 200" fill="none" stroke="#FEDD00" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 30"/></svg>
+
+    <!-- First-run admin setup -->
+    <div id="viewSetup" hidden>
+      <h2>Welcome to Swing Lab</h2>
+      <div class="sub">Set up the owner account. You'll be the admin who can add players and manage the app.</div>
+      <label>Your name</label>
+      <input type="text" id="suName" autocomplete="name" placeholder="e.g. Kyle">
+      <label>Email</label>
+      <input type="text" id="suEmail" autocomplete="email" placeholder="you@example.com">
+      <label>Password</label>
+      <input type="password" id="suPass" autocomplete="new-password" placeholder="Choose a password">
+      <button class="btn" id="suBtn">Create admin account</button>
+      <div class="auth-err" id="suErr"></div>
+    </div>
+
+    <!-- Profile picker / login -->
+    <div id="viewLogin" hidden>
+      <h2>Who's playing?</h2>
+      <div class="sub">Tap your profile to sign in.</div>
+      <div class="profile-list" id="profileList"></div>
+      <div id="pwBox" hidden>
+        <label id="pwLabel">Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password" placeholder="Password">
+        <button class="btn" id="loginBtn">Sign in</button>
+      </div>
+      <div class="auth-err" id="loginErr"></div>
+    </div>
+
+    <!-- Invite redemption -->
+    <div id="viewInvite" hidden>
+      <h2>You're invited!</h2>
+      <div class="sub" id="invSub">Set up your player account.</div>
+      <label>Your name</label>
+      <input type="text" id="invName" autocomplete="name" placeholder="Your name">
+      <label>Password</label>
+      <input type="password" id="invPass" autocomplete="new-password" placeholder="Choose a password">
+      <button class="btn" id="invBtn">Create my account</button>
+      <div class="auth-err" id="invErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ ADMIN PANEL ════════ -->
+<div id="adminModal" class="overlay" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>&#9881;&#65039; Admin</h2>
+      <button class="x" id="adminClose">&times;</button>
+    </div>
+    <div class="sub" style="color:var(--gray); font-size:13px; margin-bottom:6px">Manage players, their swings, and accounts on this device.</div>
+    <div id="userRows"></div>
+
+    <div class="admin-add">
+      <div style="font-size:13px; font-weight:700; margin-bottom:10px; color:var(--gold)">Add or invite a player</div>
+      <div class="form-row"><input type="text" id="adName" placeholder="Name"></div>
+      <div class="form-row"><input type="text" id="adEmail" placeholder="Email"></div>
+      <div class="form-row" style="align-items:center">
+        <select id="adRole" style="flex:1"><option value="user">Player</option><option value="admin">Admin</option></select>
+      </div>
+      <div class="form-row" style="gap:8px">
+        <button class="btn small" id="adCreate" style="flex:1">Create now</button>
+        <button class="btn ghost small" id="adInvite" style="flex:1">&#9993;&#65039; Email invite</button>
+      </div>
+      <div class="admin-note" id="adNote">
+        <b>Create now</b> makes the account on <i>this</i> device with a temporary password you can share.
+        <b>Email invite</b> opens your mail app with a join link — the player taps it on their own device to set a password.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ TUTORIAL ════════ -->
+<div id="tutorial" class="overlay" hidden>
+  <div class="tut-card">
+    <div class="tut-stage" id="tutStage"></div>
+    <div class="tut-title" id="tutTitle"></div>
+    <div class="tut-body" id="tutBody"></div>
+    <div class="tut-dots" id="tutDots"></div>
+    <div class="tut-nav">
+      <button class="btn ghost" id="tutPrev">Back</button>
+      <button class="btn" id="tutNext">Next</button>
+    </div>
+    <div class="tut-skip" id="tutSkip">Skip tutorial</div>
+  </div>
+</div>
+
+<!-- ════════ CAPTURE GUIDE ════════ -->
+<div id="captureModal" class="overlay" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>&#128247; Filming a good swing</h2>
+      <button class="x" id="capClose">&times;</button>
+    </div>
+    <div class="sub" style="color:var(--gray); font-size:13px; margin-bottom:6px">A few seconds of setup makes the AI analysis far more accurate.</div>
+    <div class="cap-step"><div class="num">1</div><div class="ct"><b>Film face-on</b><p>Put the camera directly in front of you (or directly down the target line), about 10–12 feet away — not at an angle.</p></div></div>
+    <div class="cap-step"><div class="num">2</div><div class="ct"><b>Get your whole body in frame</b><p>Head to feet, with a little room above and below. The AI needs to see your shoulders, hips, and the club.</p></div></div>
+    <div class="cap-step"><div class="num">3</div><div class="ct"><b>Steady the phone</b><p>Lean it against something or use a small tripod. A still camera lets the auto-trim and pose tracking lock on.</p></div></div>
+    <div class="cap-step"><div class="num">4</div><div class="ct"><b>Good, even light</b><p>Face the light; avoid filming into the sun. Bright, plain backgrounds track best.</p></div></div>
+    <div class="cap-step"><div class="num">5</div><div class="ct"><b>Keep it short</b><p>One swing per clip. Start a second or two before you take the club back and stop after the finish — the app auto-trims the rest.</p></div></div>
+    <button class="btn" id="capLoad" style="width:100%; margin-top:18px">Got it &mdash; load my video</button>
+  </div>
+</div>
+
 <header>
   <svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0d0d0d"/><rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#FEDD00" stroke-width="10"/><line x1="318" y1="96" x2="318" y2="330" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M318 96 L210 138 L318 180 Z" fill="#FEDD00"/><path d="M70 380 Q256 320 442 380 L442 420 Q256 360 70 420 Z" fill="#FEDD00" opacity="0.9"/><circle cx="190" cy="330" r="58" fill="#fff"/><path d="M96 250 Q190 120 360 200" fill="none" stroke="#FEDD00" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 30"/></svg>
   <h1>SWING <span>LAB</span></h1>
+  <div id="userChip">
+    <div class="avatar" id="ucAvatar">?</div>
+    <span class="uc-name" id="ucName"></span>
+    <button class="uc-btn" id="ucToggle" aria-label="Account menu">&#9662;</button>
+    <div id="userMenu" hidden>
+      <div class="role-tag" id="umRole"></div>
+      <button id="umTutorial">&#127909; Replay tutorial</button>
+      <button id="umAdmin" hidden>&#9881;&#65039; Admin panel</button>
+      <button id="umLogout">&#128682; Sign out</button>
+    </div>
+  </div>
 </header>
 
 <main>
@@ -217,6 +403,7 @@
         <div class="big">&#127948;&#65039;</div>
         <div>Record or load a swing video,<br>then scrub frame-by-frame and draw on it.</div>
         <button class="btn" id="loadBtn2">Load Swing Video</button>
+        <button id="howToFilm">&#128247; How to film a good swing</button>
       </div>
     </div>
     <input type="file" id="fileInput" accept="video/*" hidden>
@@ -662,7 +849,7 @@ function stopTempo() {
 tempoBtn.addEventListener('click', () => tempoOn ? stopTempo() : startTempo());
 
 /* ═══════════ Practice Log ═══════════ */
-const LS_KEY = 'swinglab-log';
+function logKey() { return 'swinglab-log:' + (window.SL && window.SL.uid ? window.SL.uid : '_guest'); }
 let rating = 3;
 const starsEl = document.getElementById('stars');
 
@@ -672,8 +859,9 @@ function paintStars() {
 starsEl.querySelectorAll('span').forEach(s => s.addEventListener('click', () => { rating = +s.dataset.v; paintStars(); }));
 paintStars();
 
-function getLog()  { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } }
-function setLog(l) { localStorage.setItem(LS_KEY, JSON.stringify(l)); }
+function getLog()  { try { return JSON.parse(localStorage.getItem(logKey())) || []; } catch { return []; } }
+function setLog(l) { localStorage.setItem(logKey(), JSON.stringify(l)); }
+window.renderLog = renderLog;   // let the auth layer refresh on login/out
 
 document.getElementById('logSave').addEventListener('click', () => {
   const note = document.getElementById('logNote').value.trim();
@@ -1087,6 +1275,7 @@ $id('saveBtn').addEventListener('click', async () => {
     const now = new Date();
     await dbPut({
       id: Date.now(),
+      userId: (window.SL && window.SL.uid) || '_guest',
       date: now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' +
             now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
       pro: $id('proSelect').value,
@@ -1106,6 +1295,8 @@ async function renderSaved() {
   const list = $id('savedList');
   let recs = [];
   try { recs = await dbAll(); } catch {}
+  const uid = (window.SL && window.SL.uid) || '_guest';
+  recs = recs.filter(r => (r.userId || '_guest') === uid);
   recs.sort((a, b) => b.id - a.id);
   if (!recs.length) {
     list.innerHTML = '<div class="empty-note" style="font-size:13px">Nothing saved yet &mdash; analyze a swing, then hit save.</div>';
@@ -1151,8 +1342,281 @@ async function loadSaved(r) {
 
 renderSaved();
 
+/* bridge for the auth/admin layer (other <script> block) */
+window.SwingDB = {
+  refresh: renderSaved,
+  countForUser: async uid => { try { return (await dbAll()).filter(r => (r.userId || '_guest') === uid).length; } catch { return 0; } },
+  deleteForUser: async uid => {
+    try { for (const r of (await dbAll()).filter(r => (r.userId || '_guest') === uid)) await dbDel(r.id); } catch {}
+    renderSaved();
+  }
+};
+window.dispatchEvent(new Event('swingdb-ready'));
+
 aBtn.addEventListener('click', analyze);
 $id('proSelect').addEventListener('change', renderComparison);
+</script>
+
+<script>
+/* ═══════════ Local accounts, admin, tutorial ═══════════ */
+(function () {
+  const LS_USERS = 'swinglab-users';
+  const LS_SESSION = 'swinglab-session';
+  const tutSeenKey = uid => 'swinglab-tut:' + uid;
+  const $ = id => document.getElementById(id);
+  const enc = new TextEncoder();
+  const buf2hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  const hex2buf = h => new Uint8Array(h.match(/.{2}/g).map(x => parseInt(x, 16)));
+
+  async function hashPw(pw, saltHex) {
+    const salt = saltHex ? hex2buf(saltHex) : crypto.getRandomValues(new Uint8Array(16));
+    const key = await crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, key, 256);
+    return { salt: buf2hex(salt), hash: buf2hex(bits) };
+  }
+
+  const getUsers = () => { try { return JSON.parse(localStorage.getItem(LS_USERS)) || []; } catch { return []; } };
+  const setUsers = u => localStorage.setItem(LS_USERS, JSON.stringify(u));
+  const initial = n => ((n || '?').trim().charAt(0) || '?').toUpperCase();
+  const genId = () => 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const genTempPw = () => Math.random().toString(36).slice(2, 8);
+  const appUrl = () => location.origin + location.pathname;
+
+  function toast(msg) {
+    const t = document.createElement('div');
+    t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2800);
+  }
+
+  function showOnly(view) {
+    ['viewSetup', 'viewLogin', 'viewInvite'].forEach(v => $(v).hidden = v !== view);
+    $('authGate').hidden = false;
+  }
+
+  function setSession(uid) {
+    localStorage.setItem(LS_SESSION, uid);
+    window.SL.uid = uid;
+    window.SL.user = getUsers().find(u => u.id === uid) || null;
+  }
+  function clearSession() { localStorage.removeItem(LS_SESSION); window.SL.uid = null; window.SL.user = null; }
+
+  function enterApp() {
+    $('authGate').hidden = true;
+    const u = window.SL.user;
+    $('userChip').style.display = 'flex';
+    $('ucAvatar').textContent = initial(u.name);
+    $('ucName').textContent = u.name;
+    $('umRole').textContent = u.role === 'admin' ? 'Admin' : 'Player';
+    $('umAdmin').hidden = u.role !== 'admin';
+    if (window.renderLog) window.renderLog();
+    if (window.SwingDB) window.SwingDB.refresh();
+    if (!localStorage.getItem(tutSeenKey(u.id))) startTutorial();
+  }
+
+  /* ---- login ---- */
+  let pendingLoginUid = null;
+  function renderProfiles() {
+    const list = $('profileList'); list.innerHTML = '';
+    getUsers().forEach(u => {
+      const b = document.createElement('button');
+      b.className = 'profile-btn';
+      b.innerHTML = `<div class="avatar">${initial(u.name)}</div><div><div class="pb-name">${u.name}</div><div class="pb-role">${u.role === 'admin' ? 'Admin' : 'Player'}</div></div>`;
+      b.addEventListener('click', () => {
+        pendingLoginUid = u.id;
+        $('pwLabel').textContent = 'Password for ' + u.name;
+        $('pwBox').hidden = false;
+        $('loginErr').textContent = '';
+        $('loginPass').value = '';
+        $('loginPass').focus();
+      });
+      list.appendChild(b);
+    });
+  }
+  async function doLogin() {
+    const u = getUsers().find(x => x.id === pendingLoginUid);
+    if (!u) return;
+    const { hash } = await hashPw($('loginPass').value, u.salt);
+    if (hash === u.hash) { setSession(u.id); enterApp(); }
+    else $('loginErr').textContent = 'Incorrect password.';
+  }
+
+  /* ---- first-run setup ---- */
+  async function doSetup() {
+    const name = $('suName').value.trim(), email = $('suEmail').value.trim(), pw = $('suPass').value;
+    if (!name || !email || pw.length < 4) { $('suErr').textContent = 'Fill in all fields (password 4+ characters).'; return; }
+    const { salt, hash } = await hashPw(pw);
+    const u = { id: genId(), name, email, role: 'admin', salt, hash, createdAt: Date.now() };
+    setUsers([u]);
+    const old = localStorage.getItem('swinglab-log');   // adopt any pre-accounts notes
+    if (old && !localStorage.getItem('swinglab-log:' + u.id)) { localStorage.setItem('swinglab-log:' + u.id, old); localStorage.removeItem('swinglab-log'); }
+    setSession(u.id); enterApp();
+  }
+
+  /* ---- invite redemption (data carried in the link, works cross-device) ---- */
+  let activeInvite = null;
+  function decodeJoin(raw) { try { return JSON.parse(atob(decodeURIComponent(raw))); } catch { return null; } }
+  async function doInvite() {
+    const name = $('invName').value.trim(), pw = $('invPass').value;
+    if (!name || pw.length < 4) { $('invErr').textContent = 'Enter a name and password (4+ characters).'; return; }
+    if (getUsers().some(u => u.email && activeInvite.email && u.email.toLowerCase() === activeInvite.email.toLowerCase())) {
+      $('invErr').textContent = 'An account for this email already exists on this device.'; return;
+    }
+    const { salt, hash } = await hashPw(pw);
+    const u = { id: genId(), name, email: activeInvite.email, role: activeInvite.role || 'user', salt, hash, createdAt: Date.now() };
+    const users = getUsers(); users.push(u); setUsers(users);
+    history.replaceState(null, '', appUrl());
+    setSession(u.id); enterApp();
+  }
+
+  /* ---- admin ---- */
+  function openAdmin() { $('adminModal').hidden = false; renderUserRows(); }
+  async function renderUserRows() {
+    const rows = $('userRows'); rows.innerHTML = ''; const me = window.SL.uid;
+    for (const u of getUsers()) {
+      const swings = window.SwingDB ? await window.SwingDB.countForUser(u.id) : 0;
+      let notes = 0; try { notes = (JSON.parse(localStorage.getItem('swinglab-log:' + u.id)) || []).length; } catch {}
+      const row = document.createElement('div');
+      row.className = 'urow';
+      row.innerHTML = `
+        <div class="avatar">${initial(u.name)}</div>
+        <div class="u-meta"><b>${u.name}</b>${u.role === 'admin' ? ' &middot; <span style="color:var(--gold)">admin</span>' : ''}
+          <div class="u-sub">${u.email || 'no email'} &middot; ${swings} swing${swings === 1 ? '' : 's'} &middot; ${notes} note${notes === 1 ? '' : 's'}</div></div>
+        <div class="u-acts">
+          <button class="btn ghost small" data-act="reset">Reset PW</button>
+          <button class="btn ghost small" data-act="wipe">Wipe data</button>
+          <button class="btn danger small" data-act="del"${u.id === me ? ' disabled' : ''}>Delete</button>
+        </div>`;
+      row.querySelector('[data-act="reset"]').addEventListener('click', () => resetPw(u));
+      row.querySelector('[data-act="wipe"]').addEventListener('click', () => wipeUser(u));
+      if (u.id !== me) row.querySelector('[data-act="del"]').addEventListener('click', () => deleteUser(u));
+      rows.appendChild(row);
+    }
+  }
+  async function resetPw(u) {
+    const tmp = genTempPw();
+    const { salt, hash } = await hashPw(tmp);
+    const users = getUsers(); const i = users.findIndex(x => x.id === u.id);
+    users[i].salt = salt; users[i].hash = hash; setUsers(users);
+    if (confirm(`Reset ${u.name}'s password to:\n\n   ${tmp}\n\nClick OK to email it to ${u.email || 'them'}.`) && u.email) {
+      location.href = `mailto:${u.email}?subject=${encodeURIComponent('Your Swing Lab password')}&body=${encodeURIComponent('Your new temporary password is: ' + tmp)}`;
+    } else { toast('New password: ' + tmp); }
+  }
+  async function wipeUser(u) {
+    if (!confirm(`Delete ALL of ${u.name}'s swings and notes? This cannot be undone.`)) return;
+    localStorage.removeItem('swinglab-log:' + u.id);
+    if (window.SwingDB) await window.SwingDB.deleteForUser(u.id);
+    if (u.id === window.SL.uid && window.renderLog) window.renderLog();
+    renderUserRows(); toast(u.name + "'s data wiped");
+  }
+  async function deleteUser(u) {
+    if (!confirm(`Remove ${u.name} entirely — account plus all their swings and notes?`)) return;
+    localStorage.removeItem('swinglab-log:' + u.id);
+    if (window.SwingDB) await window.SwingDB.deleteForUser(u.id);
+    setUsers(getUsers().filter(x => x.id !== u.id));
+    renderUserRows(); toast(u.name + ' removed');
+  }
+  async function adminCreate() {
+    const name = $('adName').value.trim(), email = $('adEmail').value.trim(), role = $('adRole').value;
+    if (!name) { toast('Enter a name'); return; }
+    const tmp = genTempPw();
+    const { salt, hash } = await hashPw(tmp);
+    const users = getUsers();
+    users.push({ id: genId(), name, email, role, salt, hash, createdAt: Date.now() });
+    setUsers(users);
+    $('adName').value = ''; $('adEmail').value = '';
+    renderUserRows();
+    if (email && confirm(`Created ${name}. Temporary password:\n\n   ${tmp}\n\nClick OK to email the login details to ${email}.`)) {
+      location.href = `mailto:${email}?subject=${encodeURIComponent('Your Swing Lab account')}&body=${encodeURIComponent('You have a Swing Lab account.\n\nOpen: ' + appUrl() + '\nYour name: ' + name + '\nTemporary password: ' + tmp + '\n\nAfter signing in, add it to your home screen for one-tap access.')}`;
+    } else { toast(`${name} added · temp password: ${tmp}`); }
+  }
+  function adminInvite() {
+    const name = $('adName').value.trim(), email = $('adEmail').value.trim(), role = $('adRole').value;
+    if (!email) { toast('Enter an email to invite'); return; }
+    const payload = btoa(JSON.stringify({ email, role, name }));
+    const link = appUrl() + '?join=' + encodeURIComponent(payload);
+    $('adName').value = ''; $('adEmail').value = '';
+    location.href = `mailto:${email}?subject=${encodeURIComponent("You're invited to Swing Lab")}&body=${encodeURIComponent((name ? 'Hi ' + name + ',\n\n' : '') + 'You have been invited to Swing Lab. Open this link on your phone to set up your account:\n\n' + link + '\n\nThen tap Share -> Add to Home Screen for one-tap access.')}`;
+    toast('Invite email opened');
+  }
+
+  /* ---- tutorial (auto-advancing, < 1 min) ---- */
+  const SLIDES = [
+    { title: 'Welcome to Swing Lab', body: 'Your pocket swing coach. Record swings, get AI feedback, and dial in your tempo &mdash; all on your phone.',
+      art: `<svg viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#161616"/><rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#FEDD00" stroke-width="10"/><line x1="318" y1="96" x2="318" y2="330" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M318 96 L210 138 L318 180 Z" fill="#FEDD00"/><path d="M70 380 Q256 320 442 380 L442 420 Q256 360 70 420 Z" fill="#FEDD00" opacity="0.9"/><circle cx="190" cy="330" r="58" fill="#fff"/><path d="M96 250 Q190 120 360 200" fill="none" stroke="#FEDD00" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 30"/></svg>` },
+    { title: 'Break Down Your Swing', body: 'On <b>Analyze</b>, load a swing, slow it frame-by-frame, and draw lines, circles, and angles right on the video.',
+      art: `<svg viewBox="0 0 220 180"><rect x="20" y="15" width="180" height="150" rx="12" fill="#000" stroke="#333"/><g stroke="#bbb" stroke-width="4" stroke-linecap="round" fill="none"><line x1="110" y1="69" x2="110" y2="105"/><line x1="110" y1="80" x2="135" y2="70"/><line x1="110" y1="105" x2="98" y2="140"/><line x1="110" y1="105" x2="122" y2="140"/></g><circle cx="110" cy="60" r="9" fill="#bbb"/><line x1="135" y1="70" x2="162" y2="48" stroke="#fff" stroke-width="3"/><line x1="60" y1="150" x2="172" y2="44" stroke="#FEDD00" stroke-width="2.5" stroke-dasharray="170" stroke-dashoffset="170"><animate attributeName="stroke-dashoffset" from="170" to="0" dur="1.3s" fill="freeze"/></line><circle cx="95" cy="148" r="5" fill="#fff"/></svg>` },
+    { title: 'Your AI Coach', body: 'On <b>AI Coach</b>, it tracks your body, compares you to a tour pro, and ranks the highest-value fixes to work on.',
+      art: `<svg viewBox="0 0 220 180"><text x="110" y="22" fill="#FEDD00" font-size="14" font-weight="700" text-anchor="middle" font-family="sans-serif">YOU vs PRO</text><g stroke="#FEDD00" stroke-width="3" opacity="0.3" fill="none" stroke-linecap="round"><line x1="78" y1="63" x2="78" y2="100"/><line x1="78" y1="75" x2="103" y2="68"/><line x1="78" y1="100" x2="68" y2="135"/><line x1="78" y1="100" x2="90" y2="135"/></g><circle cx="78" cy="55" r="8" fill="#FEDD00" opacity="0.3"/><g stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"><line x1="128" y1="63" x2="128" y2="100"/><line x1="128" y1="75" x2="154" y2="66"/><line x1="128" y1="100" x2="118" y2="138"/><line x1="128" y1="100" x2="140" y2="138"/></g><circle cx="128" cy="55" r="8" fill="#fff"/><g fill="#FEDD00"><circle cx="128" cy="75" r="4"/><circle cx="128" cy="100" r="4"/><circle cx="154" cy="66" r="4"/><circle cx="118" cy="138" r="4"/><circle cx="140" cy="138" r="4"/></g></svg>` },
+    { title: 'Find Your Tempo', body: 'On <b>Tempo</b>, train the pro 3:1 rhythm with audio tones &mdash; the secret to consistent, repeatable contact.',
+      art: `<svg viewBox="0 0 220 180"><circle cx="110" cy="98" r="55" fill="none" stroke="#333" stroke-width="8"/><circle cx="110" cy="98" r="55" fill="none" stroke="#FEDD00" stroke-width="8" stroke-linecap="round" stroke-dasharray="259 345"><animateTransform attributeName="transform" type="rotate" from="-90 110 98" to="270 110 98" dur="3s" repeatCount="indefinite"/></circle><line x1="110" y1="43" x2="110" y2="31" stroke="#fff" stroke-width="5" stroke-linecap="round"/><text x="110" y="108" fill="#FEDD00" font-size="34" font-weight="800" text-anchor="middle" font-family="sans-serif">3:1</text></svg>` },
+    { title: 'Track Progress', body: 'On <b>Log</b>, save notes and star-rate every session so you can watch your game improve over time.',
+      art: `<svg viewBox="0 0 220 180"><rect x="62" y="22" width="96" height="134" rx="10" fill="#1f1f1f" stroke="#FEDD00" stroke-width="2"/><line x1="76" y1="48" x2="144" y2="48" stroke="#555" stroke-width="3"/><line x1="76" y1="66" x2="144" y2="66" stroke="#555" stroke-width="3"/><text x="110" y="108" fill="#FEDD00" font-size="20" text-anchor="middle" font-family="sans-serif">&#9733;&#9733;&#9733;&#9733;&#9734;</text><line x1="76" y1="134" x2="128" y2="134" stroke="#444" stroke-width="3"/></svg>` },
+    { title: 'Filming Tips', body: 'For the best AI results: film <b>face-on</b>, <b>full body</b> in frame, phone steady, good light. Tap &ldquo;How to film&rdquo; anytime.',
+      art: `<svg viewBox="0 0 220 180"><text x="110" y="20" fill="#FEDD00" font-size="12" font-weight="700" text-anchor="middle" font-family="sans-serif">FACE-ON &middot; FULL BODY</text><rect x="35" y="34" width="150" height="118" rx="10" fill="none" stroke="#FEDD00" stroke-width="2.5" stroke-dasharray="9 7"/><g stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"><line x1="110" y1="80" x2="110" y2="114"/><line x1="110" y1="90" x2="132" y2="82"/><line x1="110" y1="114" x2="100" y2="142"/><line x1="110" y1="114" x2="120" y2="142"/></g><circle cx="110" cy="71" r="9" fill="#fff"/></svg>` }
+  ];
+  let tutIdx = 0, tutTimer = null;
+  function startTutorial() { tutIdx = 0; $('tutorial').hidden = false; renderSlide(); }
+  function endTutorial() {
+    clearTimeout(tutTimer);
+    $('tutorial').hidden = true;
+    if (window.SL.user) localStorage.setItem(tutSeenKey(window.SL.user.id), '1');
+  }
+  function renderSlide() {
+    const s = SLIDES[tutIdx];
+    $('tutStage').innerHTML = s.art;
+    $('tutTitle').innerHTML = s.title;
+    $('tutBody').innerHTML = s.body;
+    $('tutDots').innerHTML = SLIDES.map((_, i) => `<span class="${i === tutIdx ? 'on' : ''}"></span>`).join('');
+    $('tutPrev').style.visibility = tutIdx === 0 ? 'hidden' : 'visible';
+    $('tutNext').textContent = tutIdx === SLIDES.length - 1 ? "Let's go" : 'Next';
+    clearTimeout(tutTimer);
+    if (tutIdx < SLIDES.length - 1) tutTimer = setTimeout(() => { tutIdx++; renderSlide(); }, 8500);
+  }
+
+  /* ---- wiring ---- */
+  $('suBtn').addEventListener('click', doSetup);
+  $('suPass').addEventListener('keydown', e => { if (e.key === 'Enter') doSetup(); });
+  $('loginBtn').addEventListener('click', doLogin);
+  $('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  $('invBtn').addEventListener('click', doInvite);
+  $('ucToggle').addEventListener('click', () => { $('userMenu').hidden = !$('userMenu').hidden; });
+  document.addEventListener('click', e => { if (!$('userChip').contains(e.target)) $('userMenu').hidden = true; });
+  $('umLogout').addEventListener('click', () => { clearSession(); $('userChip').style.display = 'none'; $('userMenu').hidden = true; boot(); });
+  $('umAdmin').addEventListener('click', () => { $('userMenu').hidden = true; openAdmin(); });
+  $('umTutorial').addEventListener('click', () => { $('userMenu').hidden = true; startTutorial(); });
+  $('adminClose').addEventListener('click', () => $('adminModal').hidden = true);
+  $('adCreate').addEventListener('click', adminCreate);
+  $('adInvite').addEventListener('click', adminInvite);
+  $('tutPrev').addEventListener('click', () => { if (tutIdx > 0) { tutIdx--; renderSlide(); } });
+  $('tutNext').addEventListener('click', () => { if (tutIdx < SLIDES.length - 1) { tutIdx++; renderSlide(); } else endTutorial(); });
+  $('tutSkip').addEventListener('click', endTutorial);
+  $('howToFilm').addEventListener('click', () => $('captureModal').hidden = false);
+  $('capClose').addEventListener('click', () => $('captureModal').hidden = true);
+  $('capLoad').addEventListener('click', () => { $('captureModal').hidden = true; document.getElementById('fileInput').click(); });
+
+  /* ---- boot ---- */
+  function boot() {
+    const join = new URLSearchParams(location.search).get('join');
+    if (join) {
+      const inv = decodeJoin(join);
+      if (inv && inv.email) {
+        activeInvite = inv;
+        $('invName').value = inv.name || '';
+        $('invSub').textContent = 'Set up your Swing Lab account for ' + inv.email;
+        showOnly('viewInvite'); return;
+      }
+    }
+    const users = getUsers();
+    if (!users.length) { showOnly('viewSetup'); return; }
+    const sess = localStorage.getItem(LS_SESSION);
+    if (sess && users.find(u => u.id === sess)) { setSession(sess); enterApp(); return; }
+    $('pwBox').hidden = true; renderProfiles(); showOnly('viewLogin');
+  }
+
+  window.SwingAuth = { boot, getUsers, startTutorial };
+  boot();
+})();
 </script>
 </body>
 </html>
