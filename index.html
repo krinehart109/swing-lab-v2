@@ -312,11 +312,11 @@
       <div class="form-row"><input type="text" id="adEmail" placeholder="Their Google email"></div>
       <div class="form-row" style="gap:8px">
         <button class="btn small" id="adApprove" style="flex:1">Add to allowlist</button>
-        <button class="btn ghost small" id="adInvite" style="flex:1">&#9993;&#65039; Email invite</button>
+        <button class="btn ghost small" id="adInvite" style="flex:1">&#128228; Share invite</button>
       </div>
       <div class="admin-note" id="adNote">
         Players sign in with Google, but can only use Swing Lab once their email is on the allowlist.
-        <b>Add to allowlist</b> approves the email now; <b>Email invite</b> also opens your mail app with the app link to send them.
+        <b>Add to allowlist</b> approves the email now; <b>Share invite</b> also approves them and opens your phone's share sheet (Messages, Mail, etc.) with the app link &mdash; or copies it on desktop.
       </div>
     </div>
   </div>
@@ -1572,10 +1572,29 @@ async function adminApproveEmail() {
 function adminInvite() {
   const email = $('adEmail').value.trim();
   if (!email) { toast('Enter an email to invite'); return; }
-  SB.adminApprove(email).then(() => renderUserRows()).catch(() => {});
-  location.href = `mailto:${email}?subject=${encodeURIComponent("You're invited to Swing Lab")}&body=${encodeURIComponent('You have been added to Swing Lab. Open this on your phone and tap "Sign in with Google":\n\n' + APP_URL + '\n\nThen tap Share -> Add to Home Screen for one-tap access.')}`;
+  const title = "You're invited to Swing Lab";
+  const text = `You've been added to Swing Lab! Open this link, tap "Sign in with Google", and you're in:\n\n${APP_URL}\n\nTip: in Safari, tap Share → Add to Home Screen for one-tap access.`;
+  // Approve in the background — do NOT await before share(), or iOS drops the
+  // user-gesture needed to open the share sheet.
+  SB.adminApprove(email).then(() => renderUserRows()).catch(e => toast('Approve failed: ' + (e.message || e)));
   $('adEmail').value = '';
-  toast('Invite email opened · approved');
+
+  if (navigator.share) {
+    navigator.share({ title, text })
+      .then(() => toast(email + ' approved · invite sent'))
+      .catch(err => { if (!err || err.name !== 'AbortError') copyInvite(text, email); });
+  } else {
+    copyInvite(text, email);
+  }
+}
+function copyInvite(text, email) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => toast(email + ' approved · invite copied — paste it to them'))
+      .catch(() => window.prompt('Copy this invite for ' + email + ':', text));
+  } else {
+    window.prompt('Copy this invite for ' + email + ':', text);
+  }
 }
 
 /* ---- tutorial (auto-advancing, < 1 min) ---- */
