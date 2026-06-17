@@ -437,7 +437,13 @@
         compares you to a tour pro, and ranks the highest-value fixes.
         Film <b style="color:var(--white)">face-on, full body in frame</b>, and trim the clip so it starts at address.
       </p>
-      <label class="field-label" for="proSelect">Compare my swing against</label>
+      <label class="field-label" for="clubSelect">What club did you hit?</label>
+      <select id="clubSelect">
+        <option value="iron">Iron</option>
+        <option value="hybrid">Hybrid</option>
+        <option value="driver">Driver</option>
+      </select>
+      <label class="field-label" for="proSelect" style="margin-top:12px">Compare my swing against</label>
       <select id="proSelect">
         <option value="rory">Rory McIlroy &mdash; modern power</option>
         <option value="tiger">Tiger Woods &mdash; total control</option>
@@ -904,6 +910,26 @@ const PROS = {
   hideki:  { name: 'Hideki Matsuyama',  tempo: 3.6, turn: 95,  head: 6,  hip: 15, posture: 2, blurb: 'The pause at the top keeps his transition perfectly ordered. Patience as a superpower.' }
 };
 
+/* Club changes what a "good" swing looks like: a driver is hit on the up off a
+   tee with more lateral move and a fuller turn; an iron wants a centered pivot
+   and a downward strike. These tune the head/hip thresholds, the pro-comparison
+   tolerances, and add a club-specific coaching tip. */
+const CLUBS = {
+  iron:   { name: 'Iron',   headThresh: 35, hipThresh: 50, cmpHead: 18, cmpHip: 22,
+    note: 'Irons reward a centered pivot and a slightly downward strike — keep sway low and compress the ball.',
+    tip: { title: 'Compress the iron', why: 'With an iron the low point should be just in front of the ball — ball first, then turf.',
+      drill: 'Towel drill: lay a towel a few inches behind the ball and avoid it coming down. Your divot should start after the ball.' } },
+  hybrid: { name: 'Hybrid', headThresh: 42, hipThresh: 60, cmpHead: 24, cmpHip: 30,
+    note: 'A hybrid is swung between an iron and a fairway wood — a shallow, sweeping strike with the ball just forward of centre.',
+    tip: { title: 'Sweep the hybrid', why: 'Hybrids work best swept off the turf, not dug — think shallow, not steep.',
+      drill: 'Brush the grass: make swings clipping the top of the turf without taking a big divot, chest turning through.' } },
+  driver: { name: 'Driver', headThresh: 50, hipThresh: 72, cmpHead: 30, cmpHip: 40,
+    note: 'A driver is hit on the up off a tee — more lateral move and a fuller turn are expected, and the head can stay back behind the ball.',
+    tip: { title: 'Hit up on the driver', why: 'A positive (upward) angle of attack adds distance at the same speed. Tee it high, ball forward, stay behind it.',
+      drill: 'Tee the ball so half of it sits above the crown; feel your trail shoulder work down-and-out so you catch it on the up.' } }
+};
+function curClub() { return CLUBS[($id('clubSelect') && $id('clubSelect').value) || 'iron'] || CLUBS.iron; }
+
 const RULES = [
   { id: 'tempo-fast', impact: 5, effort: 1,
     test: m => m.tempo !== null && m.tempo < 2.6,
@@ -918,16 +944,16 @@ const RULES = [
     why:  m => `Tempo measured ${m.tempo.toFixed(1)}:1 — the backswing is dragging, which makes the downswing hard to time consistently.`,
     drill: 'Feel like the club never stops moving: try Tour 21/7 on the Tempo tab and start your hands immediately on the first tone.' },
   { id: 'head', impact: 4, effort: 2,
-    test: m => m.head > 35,
-    sev:  m => (m.head - 35) / 35,
+    test: m => m.head > curClub().headThresh,
+    sev:  m => (m.head - curClub().headThresh) / curClub().headThresh,
     title: 'Quiet your head',
-    why:  m => `Your head moves ~${Math.round(m.head)}% of your shoulder width during the swing — pros stay under ~15%. A moving head moves the bottom of your swing arc.`,
+    why:  m => `Your head moves ~${Math.round(m.head)}% of your shoulder width — past the ~${curClub().headThresh}% that stays reliable for a ${curClub().name.toLowerCase()}. A moving head moves the bottom of your swing arc.`,
     drill: 'Practice with your lead temple brushing a door frame, or watch the shadow of your head on the range. Steady through impact — the finish can release freely.' },
   { id: 'hip', impact: 4, effort: 2,
-    test: m => m.hip > 50,
-    sev:  m => (m.hip - 50) / 50,
+    test: m => m.hip > curClub().hipThresh,
+    sev:  m => (m.hip - curClub().hipThresh) / curClub().hipThresh,
     title: 'Turn, don&#8217;t slide',
-    why:  m => `Your hips sway ~${Math.round(m.hip)}% of shoulder width. Sliding instead of turning drains power and causes fat and thin contact.`,
+    why:  m => `Your hips sway ~${Math.round(m.hip)}% of shoulder width — more than a ${curClub().name.toLowerCase()} swing wants (about ~${curClub().hipThresh}%). Sliding instead of turning drains power and causes fat and thin contact.`,
     drill: 'Stick an alignment rod in the ground a fist outside your trail hip. Make backswings without bumping it — you&#8217;ll feel the trail hip turn behind you.' },
   { id: 'posture', impact: 5, effort: 3,
     test: m => m.posture !== null && m.posture > 9,
@@ -1132,42 +1158,47 @@ let lastThumbs = [];
 function renderComparison() {
   if (!lastMetrics) return;
   const p = PROS[$id('proSelect').value];
+  const c = curClub();
   const m = lastMetrics;
   $id('proName').textContent = p.name;
   const fS = v => v == null ? '—' : Math.round(v) + '% of shoulders';
   const rows = [
     ['Tempo (back : down)', m.tempo ? m.tempo.toFixed(1) + ' : 1' : '—', p.tempo.toFixed(1) + ' : 1', m.tempo && Math.abs(m.tempo - p.tempo) <= 0.45],
     ['Shoulder turn (est.)', '~' + Math.round(m.turn) + '°', '~' + p.turn + '°', m.turn >= p.turn - 30],
-    ['Head sway', fS(m.head), fS(p.head), m.head <= p.head + 18],
-    ['Hip sway', fS(m.hip), fS(p.hip), m.hip <= p.hip + 22],
+    ['Head sway', fS(m.head), fS(p.head), m.head <= p.head + c.cmpHead],
+    ['Hip sway', fS(m.hip), fS(p.hip), m.hip <= p.hip + c.cmpHip],
     ['Posture change', m.posture != null ? Math.round(m.posture) + '°' : '—', p.posture + '°', m.posture != null && m.posture <= p.posture + 5]
   ];
   $id('compareTable').innerHTML = `<table class="cmp-table">
     <tr><th>Metric</th><th>You</th><th>${p.name.split(' ')[0]}</th><th></th></tr>
     ${rows.map(r => `<tr><td>${r[0]}</td><td class="you">${r[1]}</td><td>${r[2]}</td><td>${r[3] ? '&#9989;' : '&#9888;&#65039;'}</td></tr>`).join('')}
   </table>
-  <div class="pro-blurb"><b style="color:var(--gold)">${p.name}:</b> ${p.blurb}</div>`;
+  <div class="pro-blurb"><b style="color:var(--gold)">${c.name} swing:</b> ${c.note}</div>
+  <div class="pro-blurb" style="margin-top:6px"><b style="color:var(--gold)">${p.name}:</b> ${p.blurb}</div>`;
 }
 
 function effortLabel(e) { return e <= 1 ? 'Low effort' : e === 2 ? 'Medium effort' : 'Takes work'; }
 
 function renderTips(m) {
+  const club = curClub();
   const faults = RULES.filter(r => r.test(m))
     .sort((x, y) => y.sev(m) * (y.impact / y.effort) - x.sev(m) * (x.impact / x.effort))
     .slice(0, 3);
-  const picks = [...faults];
+  const clubTip = { impact: 4, effort: 2, club: true, clubName: club.name, title: club.tip.title, why: () => club.tip.why, drill: club.tip.drill };
+  const picks = [...faults, clubTip];
   for (const u of UNIVERSAL) {
     if (picks.length >= 4) break;
     if (u.id === 'tempo-u' && faults.some(f => f.id.startsWith('tempo'))) continue;
     picks.push(u);
   }
-  $id('tipsList').innerHTML = picks.map((t, i) => `
+  $id('tipsList').innerHTML = picks.slice(0, 4).map((t, i) => `
     <div class="tip">
       <div class="badges">
         ${i === 0 ? '<span class="badge gold">&#127942; Best value</span>' : ''}
+        ${t.club ? `<span class="badge gold">&#9971; ${t.clubName} focus</span>` : ''}
         <span class="badge gold">Impact ${'&#9889;'.repeat(t.impact)}</span>
         <span class="badge">${effortLabel(t.effort)}</span>
-        ${t.test ? '' : '<span class="badge">Every golfer</span>'}
+        ${(!t.test && !t.club) ? '<span class="badge">Every golfer</span>' : ''}
       </div>
       <h3>${t.title}</h3>
       <p>${t.why(m)}</p>
@@ -1267,7 +1298,7 @@ $id('saveBtn').addEventListener('click', async () => {
     const date = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ', ' +
                  now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
     const row = await window.SB.swingAdd({
-      date, pro: $id('proSelect').value, metrics: { ...lastMetrics }, thumbs: lastThumbs,
+      date, pro: $id('proSelect').value, metrics: { ...lastMetrics, club: $id('clubSelect').value }, thumbs: lastThumbs,
       trim: { start: window.trim.start, end: Math.min(vid.duration || Infinity, window.trim.end) }
     });
     try { await dbPut({ id: row.id, video: currentFile }); } catch {}
@@ -1332,6 +1363,7 @@ async function loadSaved(r) {
   lastMetrics = { ...r.metrics };
   lastThumbs = r.thumbs || [];
   $id('proSelect').value = r.pro;
+  if (r.metrics && r.metrics.club && CLUBS[r.metrics.club]) $id('clubSelect').value = r.metrics.club;
   $id('keyframes').innerHTML = lastThumbs.map(t =>
     `<div class="kf"><img src="${t.src}" style="width:100%;display:block" alt=""><div class="kf-label">${t.label}</div></div>`).join('');
   renderComparison();
@@ -1350,6 +1382,7 @@ window.dispatchEvent(new Event('swingdb-ready'));
 
 aBtn.addEventListener('click', analyze);
 $id('proSelect').addEventListener('change', renderComparison);
+$id('clubSelect').addEventListener('change', () => { if (lastMetrics) { renderComparison(); renderTips(lastMetrics); } });
 </script>
 
 <script type="module">
