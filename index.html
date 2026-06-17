@@ -915,15 +915,15 @@ const PROS = {
    and a downward strike. These tune the head/hip thresholds, the pro-comparison
    tolerances, and add a club-specific coaching tip. */
 const CLUBS = {
-  iron:   { name: 'Iron',   headThresh: 35, hipThresh: 50, cmpHead: 18, cmpHip: 22,
+  iron:   { name: 'Iron',   headThresh: 35, hipThresh: 50, cmpHead: 18, cmpHip: 22, turnThresh: 48, cmpTurn: 38, turnTarget: 85,
     note: 'Irons reward a centered pivot and a slightly downward strike — keep sway low and compress the ball.',
     tip: { title: 'Compress the iron', why: 'With an iron the low point should be just in front of the ball — ball first, then turf.',
       drill: 'Towel drill: lay a towel a few inches behind the ball and avoid it coming down. Your divot should start after the ball.' } },
-  hybrid: { name: 'Hybrid', headThresh: 42, hipThresh: 60, cmpHead: 24, cmpHip: 30,
+  hybrid: { name: 'Hybrid', headThresh: 42, hipThresh: 60, cmpHead: 24, cmpHip: 30, turnThresh: 55, cmpTurn: 32, turnTarget: 92,
     note: 'A hybrid is swung between an iron and a fairway wood — a shallow, sweeping strike with the ball just forward of centre.',
     tip: { title: 'Sweep the hybrid', why: 'Hybrids work best swept off the turf, not dug — think shallow, not steep.',
       drill: 'Brush the grass: make swings clipping the top of the turf without taking a big divot, chest turning through.' } },
-  driver: { name: 'Driver', headThresh: 50, hipThresh: 72, cmpHead: 30, cmpHip: 40,
+  driver: { name: 'Driver', headThresh: 50, hipThresh: 72, cmpHead: 30, cmpHip: 40, turnThresh: 62, cmpTurn: 25, turnTarget: 100,
     note: 'A driver is hit on the up off a tee — more lateral move and a fuller turn are expected, and the head can stay back behind the ball.',
     tip: { title: 'Hit up on the driver', why: 'A positive (upward) angle of attack adds distance at the same speed. Tee it high, ball forward, stay behind it.',
       drill: 'Tee the ball so half of it sits above the crown; feel your trail shoulder work down-and-out so you catch it on the up.' } }
@@ -962,10 +962,10 @@ const RULES = [
     why:  m => `Your spine angle changes ~${Math.round(m.posture)}&deg; between address and impact. Standing up through the ball is the #1 amateur power leak.`,
     drill: 'Set up with your glutes against a chair back and keep contact until your arms pass impact. 10 slow reps, then 10 at speed.' },
   { id: 'turn', impact: 4, effort: 2,
-    test: m => m.turn < 55,
-    sev:  m => (55 - m.turn) / 55,
+    test: m => m.turn < curClub().turnThresh,
+    sev:  m => (curClub().turnThresh - m.turn) / curClub().turnThresh,
     title: 'Free up your shoulder turn',
-    why:  m => `Estimated shoulder turn is ~${Math.round(m.turn)}&deg;. A fuller turn stores far more speed than swinging the arms harder.`,
+    why:  m => `Estimated shoulder turn is ~${Math.round(m.turn)}&deg; — short of the ~${curClub().turnTarget}&deg; a ${curClub().name.toLowerCase()} wants. A fuller turn stores far more speed than swinging the arms harder.`,
     drill: 'Flare your trail foot 20&ndash;30&deg; at address and feel your lead shoulder reach your chin at the top. Width first, speed later.' }
 ];
 
@@ -1164,7 +1164,7 @@ function renderComparison() {
   const fS = v => v == null ? '—' : Math.round(v) + '% of shoulders';
   const rows = [
     ['Tempo (back : down)', m.tempo ? m.tempo.toFixed(1) + ' : 1' : '—', p.tempo.toFixed(1) + ' : 1', m.tempo && Math.abs(m.tempo - p.tempo) <= 0.45],
-    ['Shoulder turn (est.)', '~' + Math.round(m.turn) + '°', '~' + p.turn + '°', m.turn >= p.turn - 30],
+    ['Shoulder turn (est.)', '~' + Math.round(m.turn) + '°', '~' + p.turn + '°', m.turn >= p.turn - c.cmpTurn],
     ['Head sway', fS(m.head), fS(p.head), m.head <= p.head + c.cmpHead],
     ['Hip sway', fS(m.hip), fS(p.hip), m.hip <= p.hip + c.cmpHip],
     ['Posture change', m.posture != null ? Math.round(m.posture) + '°' : '—', p.posture + '°', m.posture != null && m.posture <= p.posture + 5]
