@@ -265,6 +265,16 @@
   .cap-step .ct b { color: var(--white); font-size: 14px; }
   .cap-step .ct p { color: var(--gray); font-size: 13px; line-height: 1.45; margin-top: 2px; }
   #howToFilm { background: none; border: 1px solid var(--gold); color: var(--gold); border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+
+  /* ── Compare (you vs model) ─────────── */
+  .tip .compare-btn { margin-top: 4px; }
+  .cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cmp-pane { position: relative; background: #000; border: 1px solid #333; border-radius: 10px; overflow: hidden; aspect-ratio: 9 / 14; display: flex; align-items: center; justify-content: center; }
+  .cmp-pane video, .cmp-pane canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .cmp-label { position: absolute; top: 6px; left: 6px; z-index: 2; background: rgba(0,0,0,0.6); color: var(--gold); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 7px; border-radius: 6px; }
+  .cmp-novid { color: var(--gray); font-size: 12px; text-align: center; padding: 14px; line-height: 1.5; }
+  .cmp-caption { font-size: 13px; color: #ccc; line-height: 1.5; margin-top: 12px; text-align: center; }
+  .cmp-caption b { color: var(--gold); }
 </style>
 </head>
 <body>
@@ -351,6 +361,29 @@
     <div class="cap-step"><div class="num">4</div><div class="ct"><b>Good, even light</b><p>Face the light; avoid filming into the sun. Bright, plain backgrounds track best.</p></div></div>
     <div class="cap-step"><div class="num">5</div><div class="ct"><b>Keep it short</b><p>One swing per clip. Start a second or two before you take the club back and stop after the finish — the app auto-trims the rest.</p></div></div>
     <button class="btn" id="capLoad" style="width:100%; margin-top:18px">Got it &mdash; load my video</button>
+  </div>
+</div>
+
+<!-- ════════ COMPARE (you vs model) ════════ -->
+<div id="compareModal" class="overlay" hidden>
+  <div class="modal-card" style="max-width:680px">
+    <div class="modal-head">
+      <h2 id="cmpTitle">Compare</h2>
+      <button class="x" id="cmpClose">&times;</button>
+    </div>
+    <div class="cmp-grid">
+      <div class="cmp-pane">
+        <div class="cmp-label">You</div>
+        <video id="cmpVideo" playsinline webkit-playsinline muted loop></video>
+        <div id="cmpNoVid" class="cmp-novid" hidden>This swing&rsquo;s clip isn&rsquo;t on this device &mdash; load it on the Analyze tab to watch yourself side-by-side.</div>
+      </div>
+      <div class="cmp-pane">
+        <div class="cmp-label">Model</div>
+        <canvas id="cmpCanvas"></canvas>
+      </div>
+    </div>
+    <div class="cmp-caption" id="cmpCaption"></div>
+    <button class="btn" id="cmpPlay" style="width:100%; margin-top:12px">&#9654; Play both</button>
   </div>
 </div>
 
@@ -1179,19 +1212,26 @@ function renderComparison() {
 
 function effortLabel(e) { return e <= 1 ? 'Low effort' : e === 2 ? 'Medium effort' : 'Takes work'; }
 
+function demoKeyFor(t) {
+  if (t.club) return ({ driver: 'hitup', iron: 'compress', hybrid: 'sweep' })[t.clubId] || null;
+  return ({ head: 'head', hip: 'hip', posture: 'posture', turn: 'turn', 'tempo-fast': 'tempo', 'tempo-slow': 'tempo', 'tempo-u': 'tempo', strike: 'strike' })[t.id] || null;
+}
 function renderTips(m) {
   const club = curClub();
   const faults = RULES.filter(r => r.test(m))
     .sort((x, y) => y.sev(m) * (y.impact / y.effort) - x.sev(m) * (x.impact / x.effort))
     .slice(0, 3);
-  const clubTip = { impact: 4, effort: 2, club: true, clubName: club.name, title: club.tip.title, why: () => club.tip.why, drill: club.tip.drill };
+  const clubTip = { impact: 4, effort: 2, club: true, clubId: $id('clubSelect').value, clubName: club.name, title: club.tip.title, why: () => club.tip.why, drill: club.tip.drill };
   const picks = [...faults, clubTip];
   for (const u of UNIVERSAL) {
     if (picks.length >= 4) break;
     if (u.id === 'tempo-u' && faults.some(f => f.id.startsWith('tempo'))) continue;
     picks.push(u);
   }
-  $id('tipsList').innerHTML = picks.slice(0, 4).map((t, i) => `
+  const list = $id('tipsList');
+  list.innerHTML = picks.slice(0, 4).map((t, i) => {
+    const dk = demoKeyFor(t);
+    return `
     <div class="tip">
       <div class="badges">
         ${i === 0 ? '<span class="badge gold">&#127942; Best value</span>' : ''}
@@ -1203,8 +1243,156 @@ function renderTips(m) {
       <h3>${t.title}</h3>
       <p>${t.why(m)}</p>
       <p><b>Drill:</b> ${t.drill}</p>
-    </div>`).join('');
+      ${dk && DEMOS[dk] ? `<button class="btn ghost small compare-btn" data-demo="${dk}" data-title="${t.title}">&#9654; Compare with model</button>` : ''}
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.compare-btn').forEach(b => b.addEventListener('click', () => openCompare(b.dataset.demo, b.dataset.title)));
 }
+
+/* ═══════════ "You vs Model" demonstrators ═══════════
+   Animated, schematic reference moves (no licensed footage). Each draw(ctx,W,H,t)
+   loops with t in [0,1). Colors stay on-brand. */
+const tri = t => t < 0.5 ? t * 2 : 2 - t * 2;   // 0→1→0 over the loop
+const GOLD = '#FEDD00', WHITE = '#f5f5f5', GHOST = 'rgba(255,255,255,0.16)', DIMC = '#777';
+
+function strikeDemo(o) {
+  return { caption: o.caption, draw(c, W, H, t) {
+    c.clearRect(0, 0, W, H); const lw = Math.max(2, W / 80); c.lineCap = 'round'; c.textAlign = 'center';
+    const gy = H * 0.66, bx = W * 0.55, by = gy - o.tee * H;
+    c.strokeStyle = '#444'; c.lineWidth = Math.max(1, W / 110); c.beginPath(); c.moveTo(W * 0.08, gy); c.lineTo(W * 0.92, gy); c.stroke();
+    if (o.tee > 0.02) { c.strokeStyle = GOLD; c.lineWidth = lw * 0.6; c.beginPath(); c.moveTo(bx, gy); c.lineTo(bx, by + W * 0.03); c.stroke(); }
+    const lowX = bx + o.low * W, P0 = [W * 0.15, gy - H * 0.16], P1 = [lowX, gy + o.depth * H], P2 = [W * 0.9, by - H * 0.14];
+    c.strokeStyle = 'rgba(255,221,0,0.30)'; c.lineWidth = lw;
+    c.beginPath(); c.moveTo(P0[0], P0[1]); c.quadraticCurveTo(P1[0], P1[1], P2[0], P2[1]); c.stroke();
+    const u = t, ix = (1 - u) * (1 - u) * P0[0] + 2 * (1 - u) * u * P1[0] + u * u * P2[0],
+                iy = (1 - u) * (1 - u) * P0[1] + 2 * (1 - u) * u * P1[1] + u * u * P2[1];
+    if (o.divot) { c.strokeStyle = '#6a4a1a'; c.lineWidth = lw * 1.2; c.beginPath(); c.moveTo(bx + W * 0.02, gy); c.quadraticCurveTo(bx + W * 0.10, gy + H * 0.04, bx + W * 0.20, gy); c.stroke(); }
+    c.fillStyle = WHITE; c.beginPath(); c.arc(bx, by, W * 0.04, 0, 7); c.fill();
+    c.fillStyle = GOLD; c.beginPath(); c.arc(ix, iy, W * 0.03, 0, 7); c.fill();
+    c.fillStyle = GOLD; c.font = `800 ${Math.round(W / 11)}px sans-serif`; c.fillText(o.tag, W * 0.5, H * 0.92);
+  } };
+}
+
+const DEMOS = {
+  head: { caption: '<b>Quiet head:</b> the body rotates around a steady head. The white dot stays on the line — the faded one is the sway to avoid.',
+    draw(c, W, H, t) {
+      c.clearRect(0, 0, W, H); const lw = Math.max(2, W / 80), cx = W / 2; c.lineCap = 'round'; c.textAlign = 'center';
+      const turn = tri(t);
+      c.strokeStyle = 'rgba(255,255,255,0.25)'; c.setLineDash([W * 0.02, W * 0.02]); c.lineWidth = Math.max(1, W / 160);
+      c.beginPath(); c.moveTo(cx, H * 0.12); c.lineTo(cx, H * 0.9); c.stroke(); c.setLineDash([]);
+      c.strokeStyle = DIMC; c.lineWidth = lw; c.beginPath(); c.moveTo(cx, H * 0.78); c.lineTo(cx, H * 0.45); c.stroke();
+      const tilt = turn * 38 * Math.PI / 180, half = W * 0.18, dx = Math.cos(tilt) * half, dy = Math.sin(tilt) * half;
+      c.strokeStyle = GOLD; c.lineWidth = lw * 1.5; c.beginPath(); c.moveTo(cx - dx, H * 0.45 - dy); c.lineTo(cx + dx, H * 0.45 + dy); c.stroke();
+      const sway = Math.sin(t * 2 * Math.PI) * W * 0.10;
+      c.fillStyle = GHOST; c.beginPath(); c.arc(cx + sway, H * 0.30, W * 0.055, 0, 7); c.fill();
+      c.fillStyle = WHITE; c.beginPath(); c.arc(cx, H * 0.30, W * 0.055, 0, 7); c.fill();
+      c.fillStyle = GOLD; c.font = `700 ${Math.round(W / 13)}px sans-serif`; c.fillText('STAYS PUT', cx, H * 0.1);
+    } },
+  turn: { caption: '<b>Turn behind the ball:</b> coil the lead shoulder to a full turn at the top. Rotation makes speed — not lifting the arms.',
+    draw(c, W, H, t) {
+      c.clearRect(0, 0, W, H); const lw = Math.max(2, W / 80), cx = W / 2, cy = H * 0.5; c.lineCap = 'round'; c.textAlign = 'center';
+      const deg = Math.round(tri(t) * 90), base = -Math.PI / 2;
+      c.strokeStyle = 'rgba(255,221,0,0.25)'; c.lineWidth = lw;
+      c.beginPath(); c.arc(cx, cy, W * 0.27, base, base - 90 * Math.PI / 180, true); c.stroke();
+      const a = base - deg * Math.PI / 180;
+      c.strokeStyle = GOLD; c.lineWidth = lw * 1.4; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a) * W * 0.27, cy + Math.sin(a) * W * 0.27); c.stroke();
+      c.fillStyle = WHITE; c.beginPath(); c.arc(cx, cy, W * 0.045, 0, 7); c.fill();
+      c.fillStyle = GOLD; c.font = `800 ${Math.round(W / 8)}px sans-serif`; c.fillText(deg + '°', cx, cy + H * 0.18);
+    } },
+  hip: { caption: '<b>Turn, don’t slide:</b> the hips rotate inside your stance (gold). Sliding past the line (faded) leaks power and causes fat/thin contact.',
+    draw(c, W, H, t) {
+      c.clearRect(0, 0, W, H); const lw = Math.max(2, W / 80), cx = W / 2, cy = H * 0.55; c.lineCap = 'round'; c.textAlign = 'center';
+      const turn = tri(t);
+      c.strokeStyle = 'rgba(255,255,255,0.25)'; c.setLineDash([W * 0.02, W * 0.02]); c.lineWidth = Math.max(1, W / 160);
+      [cx - W * 0.20, cx + W * 0.20].forEach(x => { c.beginPath(); c.moveTo(x, H * 0.32); c.lineTo(x, H * 0.8); c.stroke(); }); c.setLineDash([]);
+      c.strokeStyle = GHOST; c.lineWidth = lw * 1.4; const slide = turn * W * 0.18;
+      c.beginPath(); c.moveTo(cx - W * 0.13 + slide, cy); c.lineTo(cx + W * 0.13 + slide, cy); c.stroke();
+      const half = W * 0.13 * Math.cos(turn * 0.9), yo = Math.sin(turn * 0.9) * H * 0.03;
+      c.strokeStyle = GOLD; c.lineWidth = lw * 1.6; c.beginPath(); c.moveTo(cx - half, cy + yo); c.lineTo(cx + half, cy - yo); c.stroke();
+      c.strokeStyle = DIMC; c.lineWidth = lw; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx, H * 0.34); c.stroke();
+      c.fillStyle = WHITE; c.beginPath(); c.arc(cx, H * 0.30, W * 0.05, 0, 7); c.fill();
+      c.fillStyle = GOLD; c.font = `700 ${Math.round(W / 13)}px sans-serif`; c.fillText('ROTATE', cx, H * 0.92);
+    } },
+  posture: { caption: '<b>Hold your spine angle:</b> keep the tilt you set at address all the way to impact (gold). Standing up early (faded) is the #1 power leak.',
+    draw(c, W, H, t) {
+      c.clearRect(0, 0, W, H); const lw = Math.max(2, W / 80); c.lineCap = 'round';
+      const bx = W * 0.5, byy = H * 0.82, len = H * 0.46, sw = tri(t);
+      const ang = -Math.PI / 2 + 0.34, ex = bx + Math.cos(ang) * len, ey = byy + Math.sin(ang) * len;
+      const gang = -Math.PI / 2 + 0.34 * (1 - sw * 0.92), gx = bx + Math.cos(gang) * len, gy2 = byy + Math.sin(gang) * len;
+      c.strokeStyle = GHOST; c.lineWidth = lw * 1.4; c.beginPath(); c.moveTo(bx, byy); c.lineTo(gx, gy2); c.stroke();
+      c.fillStyle = GHOST; c.beginPath(); c.arc(gx, gy2, W * 0.05, 0, 7); c.fill();
+      c.strokeStyle = GOLD; c.lineWidth = lw * 1.6; c.beginPath(); c.moveTo(bx, byy); c.lineTo(ex, ey); c.stroke();
+      c.fillStyle = WHITE; c.beginPath(); c.arc(ex, ey, W * 0.05, 0, 7); c.fill();
+      c.fillStyle = WHITE; c.beginPath(); c.arc(bx + W * 0.24, H * 0.86, W * 0.03, 0, 7); c.fill();
+    } },
+  tempo: { caption: '<b>3:1 tempo:</b> three counts smooth to the top, one count down. Same ratio for every club — that’s what creates repeatable contact.',
+    draw(c, W, H, t) {
+      c.clearRect(0, 0, W, H); const lw = Math.max(2, W / 70), px = W * 0.5, py = H * 0.30, len = H * 0.5; c.lineCap = 'round'; c.textAlign = 'center';
+      const back = t < 0.75, u = back ? t / 0.75 : (t - 0.75) / 0.25, ang = -Math.PI / 2 + (back ? u : 1 - u) * 2.3;
+      c.strokeStyle = 'rgba(255,255,255,0.12)'; c.lineWidth = Math.max(1, W / 160); c.beginPath(); c.arc(px, py, len, 0, Math.PI); c.stroke();
+      c.strokeStyle = GOLD; c.lineWidth = lw; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(ang) * len, py + Math.sin(ang) * len); c.stroke();
+      c.fillStyle = WHITE; c.beginPath(); c.arc(px + Math.cos(ang) * len, py + Math.sin(ang) * len, W * 0.035, 0, 7); c.fill();
+      c.fillStyle = back ? GOLD : WHITE; c.font = `800 ${Math.round(W / 6)}px sans-serif`; c.fillText(back ? String(Math.min(3, Math.floor(t / 0.25) + 1)) : '1', px, H * 0.93);
+      c.fillStyle = DIMC; c.font = `700 ${Math.round(W / 16)}px sans-serif`; c.fillText(back ? 'BACK' : 'DOWN', px, H * 0.75);
+    } },
+  hitup:    strikeDemo({ tee: 0.13, low: -0.06, depth: 0.02, divot: false, tag: 'HIT UP',     caption: '<b>Hit up on the driver:</b> teed high, ball forward, stay behind it. The clubhead is travelling UP through impact (low point before the ball).' }),
+  compress: strikeDemo({ tee: 0.00, low: 0.06,  depth: 0.05, divot: true,  tag: 'BALL FIRST', caption: '<b>Compress the iron:</b> ball first, then turf. The low point is just AFTER the ball, so the divot starts in front of it.' }),
+  sweep:    strikeDemo({ tee: 0.03, low: 0.0,   depth: 0.02, divot: false, tag: 'SWEEP',      caption: '<b>Sweep the hybrid:</b> shallow through the ball, ball just forward of centre — brush the turf rather than digging.' }),
+  strike: { caption: '<b>Centre strike:</b> find the middle of the face. A centered hit beats more clubhead speed off the heel or toe.',
+    draw(c, W, H, t) {
+      c.clearRect(0, 0, W, H); const cx = W / 2, cy = H / 2;
+      c.strokeStyle = DIMC; c.lineWidth = Math.max(2, W / 80); c.strokeRect(W * 0.2, H * 0.22, W * 0.6, H * 0.56);
+      for (let i = 3; i >= 1; i--) { c.strokeStyle = i === 1 ? GOLD : 'rgba(255,255,255,0.18)'; c.lineWidth = Math.max(1, W / 120); c.beginPath(); c.arc(cx, cy, W * 0.11 * i, 0, 7); c.stroke(); }
+      const r = W * 0.30 * (1 - tri(t)), a = t * 8 * Math.PI;
+      c.fillStyle = GOLD; c.beginPath(); c.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, W * 0.035, 0, 7); c.fill();
+    } }
+};
+
+/* compare modal */
+const cmpVideo = $id('cmpVideo'), cmpCanvas = $id('cmpCanvas');
+let cmpRAF = null, cmpT = 0, cmpDraw = null, cmpPlaying = false;
+function sizeCmpCanvas() {
+  const pane = cmpCanvas.parentElement;
+  cmpCanvas.width = Math.max(2, pane.clientWidth * devicePixelRatio);
+  cmpCanvas.height = Math.max(2, pane.clientHeight * devicePixelRatio);
+}
+function drawCmpFrame() { if (cmpDraw) cmpDraw(cmpCanvas.getContext('2d'), cmpCanvas.width, cmpCanvas.height, cmpT); }
+function startCmp() {
+  cmpPlaying = true; $id('cmpPlay').innerHTML = '&#10074;&#10074; Pause';
+  if (currentFile && cmpVideo.src) { try { if (window.trim) cmpVideo.currentTime = window.trim.start; cmpVideo.play(); } catch {} }
+  cancelAnimationFrame(cmpRAF);
+  let last = performance.now();
+  const loop = now => {
+    cmpT = (cmpT + (now - last) / 2400) % 1; last = now;
+    if (currentFile && window.trim && cmpVideo.duration && cmpVideo.currentTime >= Math.min(cmpVideo.duration, window.trim.end)) cmpVideo.currentTime = window.trim.start;
+    drawCmpFrame();
+    cmpRAF = requestAnimationFrame(loop);
+  };
+  cmpRAF = requestAnimationFrame(loop);
+}
+function stopCmp() { cmpPlaying = false; cancelAnimationFrame(cmpRAF); cmpRAF = null; try { cmpVideo.pause(); } catch {} $id('cmpPlay').innerHTML = '&#9654; Play both'; }
+function openCompare(key, title) {
+  const demo = DEMOS[key]; if (!demo) return;
+  cmpDraw = demo.draw; cmpT = 0;
+  $id('cmpTitle').textContent = title || 'Compare';
+  $id('cmpCaption').innerHTML = demo.caption;
+  $id('compareModal').hidden = false;
+  if (currentFile) {
+    cmpVideo.style.display = ''; $id('cmpNoVid').hidden = true;
+    cmpVideo.src = URL.createObjectURL(currentFile); cmpVideo.load();
+  } else {
+    cmpVideo.style.display = 'none'; $id('cmpNoVid').hidden = false;
+  }
+  requestAnimationFrame(() => { sizeCmpCanvas(); startCmp(); });
+}
+function closeCompare() {
+  stopCmp(); $id('compareModal').hidden = true;
+  try { if (cmpVideo.src) URL.revokeObjectURL(cmpVideo.src); } catch {}
+  cmpVideo.removeAttribute('src');
+}
+$id('cmpClose').addEventListener('click', closeCompare);
+$id('cmpPlay').addEventListener('click', () => cmpPlaying ? stopCmp() : startCmp());
+window.addEventListener('resize', () => { if (!$id('compareModal').hidden) { sizeCmpCanvas(); drawCmpFrame(); } });
 
 async function analyze() {
   if (!vid.src || !vid.duration) {
