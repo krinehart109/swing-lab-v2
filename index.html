@@ -188,6 +188,7 @@
   .badge.gold { background: rgba(254, 221, 0, 0.15); color: var(--gold); }
   .tip p { font-size: 13px; line-height: 1.5; color: #ccc; margin-bottom: 6px; }
   .tip p b { color: var(--white); }
+  .tip .tip-links a { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
   .coach-foot { font-size: 11px; color: #777; margin-top: 14px; text-align: center; line-height: 1.5; }
   #trimInfo { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--gold); }
   #trimInfo .btn { padding: 5px 10px; font-size: 11px; flex-shrink: 0; }
@@ -947,19 +948,26 @@ const PROS = {
    tee with more lateral move and a fuller turn; an iron wants a centered pivot
    and a downward strike. These tune the head/hip thresholds, the pro-comparison
    tolerances, and add a club-specific coaching tip. */
+/* stable video links: YouTube searches for the exact drill (specific video
+   URLs rot; a tight search always surfaces current top instruction) */
+const yt = q => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+
 const CLUBS = {
   iron:   { name: 'Iron',   headThresh: 35, hipThresh: 50, cmpHead: 18, cmpHip: 22, turnThresh: 48, cmpTurn: 38, turnTarget: 85,
     note: 'Irons reward a centered pivot and a slightly downward strike — keep sway low and compress the ball.',
     tip: { title: 'Compress the iron', why: 'With an iron the low point should be just in front of the ball — ball first, then turf.',
-      drill: 'Towel drill: lay a towel a few inches behind the ball and avoid it coming down. Your divot should start after the ball.' } },
+      drill: 'Towel drill: lay a towel a few inches behind the ball and avoid it coming down. Your divot should start after the ball.',
+      links: [{ t: 'Towel drill', u: yt('golf towel drill ball first contact') }, { t: 'Compress your irons', u: yt('how to compress irons golf') }] } },
   hybrid: { name: 'Hybrid', headThresh: 42, hipThresh: 60, cmpHead: 24, cmpHip: 30, turnThresh: 55, cmpTurn: 32, turnTarget: 92,
     note: 'A hybrid is swung between an iron and a fairway wood — a shallow, sweeping strike with the ball just forward of centre.',
     tip: { title: 'Sweep the hybrid', why: 'Hybrids work best swept off the turf, not dug — think shallow, not steep.',
-      drill: 'Brush the grass: make swings clipping the top of the turf without taking a big divot, chest turning through.' } },
+      drill: 'Brush the grass: make swings clipping the top of the turf without taking a big divot, chest turning through.',
+      links: [{ t: 'How to hit hybrids', u: yt('how to hit a hybrid golf club properly') }] } },
   driver: { name: 'Driver', headThresh: 50, hipThresh: 72, cmpHead: 30, cmpHip: 40, turnThresh: 62, cmpTurn: 25, turnTarget: 100,
     note: 'A driver is hit on the up off a tee — more lateral move and a fuller turn are expected, and the head can stay back behind the ball.',
     tip: { title: 'Hit up on the driver', why: 'A positive (upward) angle of attack adds distance at the same speed. Tee it high, ball forward, stay behind it.',
-      drill: 'Tee the ball so half of it sits above the crown; feel your trail shoulder work down-and-out so you catch it on the up.' } }
+      drill: 'Tee the ball so half of it sits above the crown; feel your trail shoulder work down-and-out so you catch it on the up.',
+      links: [{ t: 'Hit up on driver', u: yt('hit up on driver drill positive angle of attack') }] } }
 };
 function curClub() { return CLUBS[($id('clubSelect') && $id('clubSelect').value) || 'iron'] || CLUBS.iron; }
 
@@ -969,49 +977,58 @@ const RULES = [
     sev:  m => (2.6 - m.tempo) * 2,
     title: 'Slow the transition',
     why:  m => `Your tempo measured ${m.tempo.toFixed(1)}:1 — quicker than the 3:1 tour benchmark. Rushing the change of direction costs more strikes than any positional flaw.`,
-    drill: 'Shadow-swing to the Tempo tab (Smooth 24/8): say "one-two-three" going back, "one" coming down. 20 reps a day for a week — no ball needed.' },
+    drill: 'Shadow-swing to the Tempo tab (Smooth 24/8): say "one-two-three" going back, "one" coming down. 20 reps a day for a week — no ball needed.',
+    links: [{ t: '3:1 tempo explained', u: yt('tour tempo 3 to 1 golf swing explained') }, { t: 'Transition drills', u: yt('golf transition drill stop rushing downswing') }] },
   { id: 'tempo-slow', impact: 3, effort: 1,
     test: m => m.tempo !== null && m.tempo > 4.0,
     sev:  m => (m.tempo - 4.0),
     title: 'Tighten the backswing',
     why:  m => `Tempo measured ${m.tempo.toFixed(1)}:1 — the backswing is dragging, which makes the downswing hard to time consistently.`,
-    drill: 'Feel like the club never stops moving: try Tour 21/7 on the Tempo tab and start your hands immediately on the first tone.' },
+    drill: 'Feel like the club never stops moving: try Tour 21/7 on the Tempo tab and start your hands immediately on the first tone.',
+    links: [{ t: 'Fix a slow backswing', u: yt('golf backswing too slow tempo drill') }] },
   { id: 'head', impact: 4, effort: 2,
     test: m => m.head > curClub().headThresh,
     sev:  m => (m.head - curClub().headThresh) / curClub().headThresh,
     title: 'Quiet your head',
     why:  m => `Your head moves ~${Math.round(m.head)}% of your shoulder width — past the ~${curClub().headThresh}% that stays reliable for a ${curClub().name.toLowerCase()}. A moving head moves the bottom of your swing arc.`,
-    drill: 'Practice with your lead temple brushing a door frame, or watch the shadow of your head on the range. Steady through impact — the finish can release freely.' },
+    drill: 'Practice with your lead temple brushing a door frame, or watch the shadow of your head on the range. Steady through impact — the finish can release freely.',
+    links: [{ t: 'Steady head drill', u: yt('steady head golf swing drill') }, { t: 'Stop swaying', u: yt('golf stop head sway drill') }] },
   { id: 'hip', impact: 4, effort: 2,
     test: m => m.hip > curClub().hipThresh,
     sev:  m => (m.hip - curClub().hipThresh) / curClub().hipThresh,
     title: 'Turn, don&#8217;t slide',
     why:  m => `Your hips sway ~${Math.round(m.hip)}% of shoulder width — more than a ${curClub().name.toLowerCase()} swing wants (about ~${curClub().hipThresh}%). Sliding instead of turning drains power and causes fat and thin contact.`,
-    drill: 'Stick an alignment rod in the ground a fist outside your trail hip. Make backswings without bumping it — you&#8217;ll feel the trail hip turn behind you.' },
+    drill: 'Stick an alignment rod in the ground a fist outside your trail hip. Make backswings without bumping it — you&#8217;ll feel the trail hip turn behind you.',
+    links: [{ t: 'Stop hip sway', u: yt('golf hip sway fix drill alignment stick') }] },
   { id: 'posture', impact: 5, effort: 3,
     test: m => m.posture !== null && m.posture > 9,
     sev:  m => (m.posture - 9) / 9,
     title: 'Hold your posture (no early extension)',
     why:  m => `Your spine angle changes ~${Math.round(m.posture)}&deg; between address and impact. Standing up through the ball is the #1 amateur power leak.`,
-    drill: 'Set up with your glutes against a chair back and keep contact until your arms pass impact. 10 slow reps, then 10 at speed.' },
+    drill: 'Set up with your glutes against a chair back and keep contact until your arms pass impact. 10 slow reps, then 10 at speed.',
+    links: [{ t: 'Fix early extension', u: yt('early extension golf fix chair drill') }] },
   { id: 'turn', impact: 4, effort: 2,
     test: m => m.turn < curClub().turnThresh,
     sev:  m => (curClub().turnThresh - m.turn) / curClub().turnThresh,
     title: 'Free up your shoulder turn',
     why:  m => `Estimated shoulder turn is ~${Math.round(m.turn)}&deg; — short of the ~${curClub().turnTarget}&deg; a ${curClub().name.toLowerCase()} wants. A fuller turn stores far more speed than swinging the arms harder.`,
-    drill: 'Flare your trail foot 20&ndash;30&deg; at address and feel your lead shoulder reach your chin at the top. Width first, speed later.' }
+    drill: 'Flare your trail foot 20&ndash;30&deg; at address and feel your lead shoulder reach your chin at the top. Width first, speed later.',
+    links: [{ t: 'Bigger shoulder turn', u: yt('golf bigger shoulder turn drill') }] }
 ];
 
 const UNIVERSAL = [
   { id: 'strike', impact: 5, effort: 1, title: 'Find the center of the face',
     why:  () => 'Strike location is worth more ball speed than any swing change — a centered hit at 85 mph beats a heel strike at 95.',
-    drill: 'Spray foot powder (or dry-erase marker) on the clubface and hit 20 balls. Just seeing your pattern moves it toward center.' },
+    drill: 'Spray foot powder (or dry-erase marker) on the clubface and hit 20 balls. Just seeing your pattern moves it toward center.',
+    links: [{ t: 'Foot spray drill', u: yt('golf foot spray drill strike location clubface') }] },
   { id: 'wedge', impact: 4, effort: 2, title: 'Own 40&ndash;60 yards',
     why:  () => 'The fastest scoring gains for almost every amateur live inside 60 yards, not off the tee.',
-    drill: 'Ladder drill: wedges to 40, 50, 60 yards in rotation, 5 balls each. Log the session in the Log tab.' },
+    drill: 'Ladder drill: wedges to 40, 50, 60 yards in rotation, 5 balls each. Log the session in the Log tab.',
+    links: [{ t: 'Wedge ladder drill', u: yt('golf wedge distance control ladder drill') }] },
   { id: 'tempo-u', impact: 3, effort: 1, title: 'Groove 3:1 tempo',
     why:  () => 'Tempo is the cheapest consistency upgrade in golf — it organizes the whole swing without a single technical thought.',
-    drill: '20 shadow swings a day with the Tempo tab tones: takeaway on one, top on two, strike on three.' }
+    drill: '20 shadow swings a day with the Tempo tab tones: takeaway on one, top on two, strike on three.',
+    links: [{ t: '3:1 tempo explained', u: yt('tour tempo 3 to 1 golf swing explained') }] }
 ];
 
 function status(t) { sEl.innerHTML = t; }
@@ -1110,29 +1127,90 @@ const spineLean = p => {
   return Math.atan2(s.x - h.x, h.y - s.y) * 180 / Math.PI;
 };
 
+/* Swing-event detection, v2 (speed-based).
+   The old version picked "top" as the highest wrist point ANYWHERE after
+   takeaway — which usually latched onto the follow-through (hands finish
+   high), corrupting impact, tempo, and every downstream grade.
+   New pipeline: impact = fastest wrist movement while the hands are low;
+   top = highest wrist point BEFORE impact; address = the quiet (slow-moving)
+   wrist position before the top; takeaway = last frame still at that quiet
+   position. Implausible events return null metrics instead of garbage. */
 function computeMetrics(frames) {
   const vi = frames.map((f, i) => f.p ? i : -1).filter(i => i >= 0);
   if (vi.length < 12) return null;
   const F = i => frames[i];
-  const a  = vi[0];
+
+  // smoothed wrist track (3-tap) over valid frames
+  const W = vi.map(i => wristOf(F(i).p));
+  const sm = W.map((w, k) => {
+    const p = W[Math.max(0, k - 1)], n = W[Math.min(W.length - 1, k + 1)];
+    return { x: (p.x + w.x + n.x) / 3, y: (p.y + w.y + n.y) / 3 };
+  });
+  const spd = sm.map((w, k) => k ? dist(w, sm[k - 1]) / Math.max(0.01, F(vi[k]).t - F(vi[k - 1]).t) : 0);
+
+  // impact: fastest wrist frame while the hands are in the lower part of their range
+  const ys = sm.map(w => w.y);
+  const yLo = Math.min(...ys), yHi = Math.max(...ys);
+  if (yHi - yLo < 0.05) return null;                    // no real vertical swing motion
+  const yGate = yLo + (yHi - yLo) * 0.45;
+  let ik = -1;
+  for (let k = 2; k < sm.length - 1; k++) if (sm[k].y > yGate && (ik < 0 || spd[k] > spd[ik])) ik = k;
+  if (ik < 2) return null;
+  // the speed peak lands near — but not exactly on — the bottom of the arc;
+  // walk to the local low point of the hands in either direction
+  while (ik + 1 < sm.length && sm[ik + 1].y > sm[ik].y) ik++;
+  while (ik - 1 > 1 && sm[ik - 1].y > sm[ik].y) ik--;
+
+  // top: highest wrist point before impact
+  let tk = 0;
+  for (let k = 1; k < ik; k++) if (sm[k].y < sm[tk].y) tk = k;
+  if (tk < 1) return null;
+
+  // quiet address wrist position: median of slow frames before the top
+  const med = arr => { const s = [...arr].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+  const preSpd = spd.slice(1, Math.max(2, tk));
+  const quietThr = (med(preSpd) || 0.3) * 1.5;
+  const quiet = [];
+  for (let k = 0; k < tk; k++) if (spd[k] <= quietThr) quiet.push(sm[k]);
+  const shW0 = Math.max(0.02, Math.abs(F(vi[0]).p[11].x - F(vi[0]).p[12].x));
+  const wA = quiet.length >= 2 ? { x: med(quiet.map(w => w.x)), y: med(quiet.map(w => w.y)) } : sm[0];
+
+  // takeaway: last frame before the top still at the quiet position, then
+  // back-project to true motion onset (the takeaway ramps up gradually, so the
+  // threshold crossing is late by displacement/velocity at the crossing)
+  const thr = Math.max(0.12 * shW0, 0.02);
+  let sk = 0;
+  for (let k = tk - 1; k >= 0; k--) if (dist(sm[k], wA) < thr) { sk = k; break; }
+  const ck = Math.min(tk, sk + 1);
+  // 1.5×: takeaway speed ramps up, so instantaneous speed at the crossing
+  // under-states how long the hands have already been moving
+  const onsetLag = Math.min(0.35, 1.5 * dist(sm[ck], wA) / Math.max(spd[ck], 0.05));
+  const startT = Math.max(F(vi[0]).t, F(vi[ck]).t - onsetLag);
+
+  // sub-frame refinement: the true top/impact usually fall between samples,
+  // and at ~40ms per sample that error is ~15% of a downswing — fit a parabola
+  // through each extremum's neighbours to recover the in-between time
+  const tAt = k => F(vi[k]).t;
+  const refine = k => {
+    if (k <= 0 || k >= ys.length - 1) return tAt(k);
+    const d = ys[k - 1] - 2 * ys[k] + ys[k + 1];
+    if (Math.abs(d) < 1e-9) return tAt(k);
+    const off = Math.max(-0.5, Math.min(0.5, 0.5 * (ys[k - 1] - ys[k + 1]) / d));
+    return tAt(k) + off * (tAt(k + 1) - tAt(k - 1)) / 2;
+  };
+  const topT = refine(tk), impactT = refine(ik);
+
+  const a = vi[sk], start = vi[sk], top = vi[tk], impact = vi[ik], finish = vi[vi.length - 1];
+  if (!(topT > startT && impactT > topT)) return null;
+
+  let tempo = (topT - startT) / (impactT - topT);
+  if (!(tempo > 1.2 && tempo < 8)) tempo = null;        // outside plausible swing range → don't grade it
+
   const pA = F(a).p;
   const shW = Math.max(0.02, Math.abs(pA[11].x - pA[12].x));
-  const wA = wristOf(pA);
-
-  let start = a;
-  for (const i of vi) if (i > a && dist(wristOf(F(i).p), wA) > 0.35 * shW) { start = i; break; }
-  let top = start;
-  for (const i of vi) if (i >= start && wristOf(F(i).p).y < wristOf(F(top).p).y) top = i;
-  let impact = -1;
-  for (const i of vi) if (i > top && wristOf(F(i).p).y >= wA.y - 0.04) { impact = i; break; }
-  const finish = vi[vi.length - 1];
-  if (top <= start) return null;
-
-  const tempo = impact > top ? (F(top).t - F(start).t) / (F(impact).t - F(top).t) : null;
-  const upTo = impact > top ? impact : top;
   let head = 0, hip = 0;
   for (const i of vi) {
-    if (i < a || i > upTo) continue;
+    if (i < a || i > impact) continue;
     const p = F(i).p;
     head = Math.max(head, Math.abs(p[0].x - pA[0].x) / shW * 100);
     hip  = Math.max(hip,  Math.abs(mid(p[23], p[24]).x - mid(pA[23], pA[24]).x) / shW * 100);
@@ -1140,7 +1218,7 @@ function computeMetrics(frames) {
   let minW = shW;
   for (const i of vi) { if (i < start || i > top) continue; minW = Math.min(minW, Math.abs(F(i).p[11].x - F(i).p[12].x)); }
   const turn = Math.acos(Math.min(1, Math.max(0, minW / shW))) * 180 / Math.PI;
-  const posture = impact > top ? Math.abs(spineLean(F(impact).p) - spineLean(pA)) : null;
+  const posture = Math.abs(spineLean(F(impact).p) - spineLean(pA));
 
   return { a, start, top, impact, finish, tempo, head, hip, turn, posture };
 }
@@ -1221,7 +1299,7 @@ function renderTips(m) {
   const faults = RULES.filter(r => r.test(m))
     .sort((x, y) => y.sev(m) * (y.impact / y.effort) - x.sev(m) * (x.impact / x.effort))
     .slice(0, 3);
-  const clubTip = { impact: 4, effort: 2, club: true, clubId: $id('clubSelect').value, clubName: club.name, title: club.tip.title, why: () => club.tip.why, drill: club.tip.drill };
+  const clubTip = { impact: 4, effort: 2, club: true, clubId: $id('clubSelect').value, clubName: club.name, title: club.tip.title, why: () => club.tip.why, drill: club.tip.drill, links: club.tip.links };
   const picks = [...faults, clubTip];
   for (const u of UNIVERSAL) {
     if (picks.length >= 4) break;
@@ -1243,6 +1321,7 @@ function renderTips(m) {
       <h3>${t.title}</h3>
       <p>${t.why(m)}</p>
       <p><b>Drill:</b> ${t.drill}</p>
+      ${t.links && t.links.length ? `<p class="tip-links">&#127909; <b>Watch:</b> ${t.links.map(l => `<a href="${l.u}" target="_blank" rel="noopener">${l.t}</a>`).join(' &middot; ')}</p>` : ''}
       ${dk && DEMOS[dk] ? `<button class="btn ghost small compare-btn" data-demo="${dk}" data-title="${t.title}">&#9654; Compare with model</button>` : ''}
     </div>`;
   }).join('');
@@ -1410,7 +1489,7 @@ async function analyze() {
     const ts = window.trim ? window.trim.start : 0;
     const te = window.trim ? Math.min(vid.duration, window.trim.end) : vid.duration;
     const dur = Math.min(Math.max(te - ts, 0.5), 15);
-    const n = Math.min(160, Math.max(40, Math.round(dur * 20)));
+    const n = Math.min(192, Math.max(48, Math.round(dur * 24)));
     const off = document.createElement('canvas');
     const sc = Math.min(1, 420 / vid.videoWidth);
     off.width  = Math.max(2, Math.round(vid.videoWidth * sc));
@@ -1439,7 +1518,7 @@ async function analyze() {
     renderComparison();
     renderTips(m);
     $id('coachResults').hidden = false;
-    status('Done &#9989; Scroll down for your report.');
+    status('Done &#9989; First, check the four Key Positions look right — if Address/Top/Impact are off, the numbers will be too (refilm using the capture guide).');
     bar(1);
   } catch (err) {
     status('Analysis failed: ' + (err && err.message ? err.message : err) +
