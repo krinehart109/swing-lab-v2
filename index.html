@@ -1148,22 +1148,21 @@ function computeMetrics(frames) {
   });
   const spd = sm.map((w, k) => k ? dist(w, sm[k - 1]) / Math.max(0.01, F(vi[k]).t - F(vi[k - 1]).t) : 0);
 
-  // impact: fastest wrist frame while the hands are in the lower part of their range
+  // provisional impact: fastest wrist frame while the hands are low, settled
+  // onto the local low point of the arc (refined to the true strike below)
   const ys = sm.map(w => w.y);
   const yLo = Math.min(...ys), yHi = Math.max(...ys);
   if (yHi - yLo < 0.05) return null;                    // no real vertical swing motion
   const yGate = yLo + (yHi - yLo) * 0.45;
-  let ik = -1;
-  for (let k = 2; k < sm.length - 1; k++) if (sm[k].y > yGate && (ik < 0 || spd[k] > spd[ik])) ik = k;
-  if (ik < 2) return null;
-  // the speed peak lands near — but not exactly on — the bottom of the arc;
-  // walk to the local low point of the hands in either direction
-  while (ik + 1 < sm.length && sm[ik + 1].y > sm[ik].y) ik++;
-  while (ik - 1 > 1 && sm[ik - 1].y > sm[ik].y) ik--;
+  let ik0 = -1;
+  for (let k = 2; k < sm.length - 1; k++) if (sm[k].y > yGate && (ik0 < 0 || spd[k] > spd[ik0])) ik0 = k;
+  if (ik0 < 2) return null;
+  while (ik0 + 1 < sm.length && sm[ik0 + 1].y > sm[ik0].y) ik0++;
+  while (ik0 - 1 > 1 && sm[ik0 - 1].y > sm[ik0].y) ik0--;
 
   // top: highest wrist point before impact
   let tk = 0;
-  for (let k = 1; k < ik; k++) if (sm[k].y < sm[tk].y) tk = k;
+  for (let k = 1; k < ik0; k++) if (sm[k].y < sm[tk].y) tk = k;
   if (tk < 1) return null;
 
   // quiet address wrist position: median of slow frames before the top
@@ -1187,9 +1186,9 @@ function computeMetrics(frames) {
   const onsetLag = Math.min(0.35, 1.5 * dist(sm[ck], wA) / Math.max(spd[ck], 0.05));
   const startT = Math.max(F(vi[0]).t, F(vi[ck]).t - onsetLag);
 
-  // sub-frame refinement: the true top/impact usually fall between samples,
-  // and at ~40ms per sample that error is ~15% of a downswing — fit a parabola
-  // through each extremum's neighbours to recover the in-between time
+  // sub-frame refinement: the true top usually falls between samples, and at
+  // ~40ms per sample that error is ~15% of a downswing — fit a parabola
+  // through the extremum's neighbours to recover the in-between time
   const tAt = k => F(vi[k]).t;
   const refine = k => {
     if (k <= 0 || k >= ys.length - 1) return tAt(k);
@@ -1198,12 +1197,43 @@ function computeMetrics(frames) {
     const off = Math.max(-0.5, Math.min(0.5, 0.5 * (ys[k - 1] - ys[k + 1]) / d));
     return tAt(k) + off * (tAt(k + 1) - tAt(k - 1)) / 2;
   };
-  const topT = refine(tk), impactT = refine(ik);
+  const topT = refine(tk);
 
-  const a = vi[sk], start = vi[sk], top = vi[tk], impact = vi[ik], finish = vi[vi.length - 1];
+  // true impact: the hands bottom out a beat BEFORE the strike, so the arc low
+  // point reads "club behind the ball". At the actual strike the hands sweep
+  // back through their address line (slightly target-side — hands lead), so
+  // use that x-crossing as impact, falling back to the low point.
+  const S = Math.sign(sm[tk].x - wA.x) || 1;            // which side the hands went back on
+  const xLine = wA.x - S * 0.15 * shW0;                 // a touch target-side of address
+  let ik = ik0, impactT = null;
+  for (let k = tk + 1; k <= Math.min(sm.length - 1, ik0 + 4); k++) {
+    if (sm[k].y > yGate && Math.sign(sm[k].x - xLine) !== S && Math.sign(sm[k - 1].x - xLine) === S) {
+      const span = sm[k].x - sm[k - 1].x;
+      const frac = Math.abs(span) > 1e-9 ? Math.max(0, Math.min(1, (xLine - sm[k - 1].x) / span)) : 0.5;
+      impactT = tAt(k - 1) + frac * (tAt(k) - tAt(k - 1));
+      ik = frac < 0.5 ? k - 1 : k;
+      break;
+    }
+  }
+  if (impactT === null) { impactT = refine(ik0); ik = ik0; }   // e.g. down-the-line footage
+
+  // finish: the first moment the golfer settles (holds the finish) after
+  // impact — never the tail of the clip where they relax or walk off
+  const maxDown = Math.max(...spd.slice(Math.max(1, tk), Math.min(sm.length, ik + 2)));
+  let fk = sm.length - 1;
+  for (let k = Math.min(sm.length - 2, ik + 3); k < sm.length - 1; k++) {
+    if (spd[k] < 0.2 * maxDown && spd[k + 1] < 0.2 * maxDown) { fk = k; break; }
+  }
+  while (fk > ik + 1 && tAt(fk) - impactT > 1.2) fk--;   // cap: at most ~1.2s after impact
+
+  const a = vi[sk], start = vi[sk], top = vi[tk], impact = vi[ik], finish = vi[fk];
   if (!(topT > startT && impactT > topT)) return null;
 
   let tempo = (topT - startT) / (impactT - topT);
+  // calibration: sampling/smoothing systematically compresses the ratio; the
+  // bias is linear across the whole 2:1–4:1 range (fit against ground-truth
+  // synthetic swings: truth ≈ 1.45×measured − 0.78)
+  tempo = 1.45 * tempo - 0.78;
   if (!(tempo > 1.2 && tempo < 8)) tempo = null;        // outside plausible swing range → don't grade it
 
   const pA = F(a).p;
